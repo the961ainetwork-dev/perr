@@ -1,0 +1,6 @@
+{
+  "name": "Pickle & Pepper Market",
+  "description": "An artisan e-commerce platform specializing in gourmet pickles and peppers, curated recipes, user-submitted batches (sell workflow), order placement, and an administrative dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
