@@ -43,6 +43,8 @@ interface AppContextType {
   updateProductStock: (id: string, newStock: number) => void;
   wishlist: string[];
   toggleWishlist: (productId: string) => void;
+  headerSearchQuery: string;
+  setHeaderSearchQuery: (query: string) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -92,6 +94,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     const saved = localStorage.getItem("p_m_wishlist");
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [headerSearchQuery, setHeaderSearchQuery] = useState("");
 
   // Persist states to localStorage when they change
   useEffect(() => {
@@ -398,6 +402,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateProductStock,
         wishlist,
         toggleWishlist,
+        headerSearchQuery,
+        setHeaderSearchQuery,
       }}
     >
       {children}

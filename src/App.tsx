@@ -9,7 +9,8 @@ import OrderTracker from "./components/OrderTracker";
 import AdminZone from "./components/AdminZone";
 import CartDrawer from "./components/CartDrawer";
 import CheckoutModal from "./components/CheckoutModal";
-import { Compass, Flame, Leaf, Truck } from "lucide-react";
+import FAQModal from "./components/FAQModal";
+import { Compass, Flame, Leaf, Truck, Instagram, Twitter, Pin } from "lucide-react";
 
 function MainAppContent() {
   const { userRole } = useApp();
@@ -23,6 +24,7 @@ function MainAppContent() {
   // Cart / Checkout visual switches
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
+  const [isFAQOpen, setIsFAQOpen] = useState(false);
 
   // Hero category shortcut filter state passed down to marketplace
   const [heroCategoryFilter, setHeroCategoryFilter] = useState<"pickle" | "pepper" | "all">("all");
@@ -144,6 +146,12 @@ function MainAppContent() {
         }}
       />
 
+      {/* Frequently Asked Questions Directory Manual */}
+      <FAQModal 
+        isOpen={isFAQOpen}
+        onClose={() => setIsFAQOpen(false)}
+      />
+
       {/* Gourmet Pickling Manifesto Footer */}
       <footer className="bg-stone-900 text-stone-400 border-t border-stone-800 py-12 px-6" id="app-footer">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-left">
@@ -184,10 +192,13 @@ function MainAppContent() {
           <div className="space-y-3 font-sans text-xs">
             <h4 className="font-serif text-sm font-bold text-stone-205">Network Shortcuts</h4>
             <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => { setActiveTab("market"); setHeroCategoryFilter("all"); }} className="hover:text-amber-400 text-left">Marketplace</button>
-              <button onClick={() => { setActiveTab("recipes"); setSelectedRecipeId(null); }} className="hover:text-amber-400 text-left">Recipes guides</button>
-              <button onClick={() => setActiveTab("seller")} className="hover:text-amber-400 text-left">Seller kitchen</button>
-              <button onClick={() => setActiveTab("tracker")} className="hover:text-amber-400 text-left">Track orders</button>
+              <button onClick={() => { setActiveTab("market"); setHeroCategoryFilter("all"); }} className="hover:text-amber-400 text-left cursor-pointer transition-colors">Marketplace</button>
+              <button onClick={() => { setActiveTab("recipes"); setSelectedRecipeId(null); }} className="hover:text-amber-400 text-left cursor-pointer transition-colors">Recipes guides</button>
+              <button onClick={() => setActiveTab("seller")} className="hover:text-amber-400 text-left cursor-pointer transition-colors">Seller kitchen</button>
+              <button onClick={() => setActiveTab("tracker")} className="hover:text-amber-400 text-left cursor-pointer transition-colors">Track orders</button>
+              <button onClick={() => setIsFAQOpen(true)} className="hover:text-amber-450 text-left cursor-pointer transition-colors font-bold col-span-2 text-[#C1121F] border-t border-stone-800 pt-2 flex items-center gap-1.5 mt-1">
+                <span>✦</span> Frequently Asked Questions
+              </button>
             </div>
           </div>
 
@@ -197,7 +208,37 @@ function MainAppContent() {
             <p className="text-xs text-stone-500 leading-relaxed font-sans">
               All crop applications, payment options, and delivery tracking graphics run completely simulated inside local memory. Registered under Apache-2.0 codes.
             </p>
-            <div className="text-[10px] text-stone-504 font-mono">
+            <div className="flex items-center gap-2 pt-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 mr-1 select-none">Preserve feeds:</span>
+              <a
+                href="https://instagram.com/brineandbite"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-7 h-7 rounded-none border border-stone-800 flex items-center justify-center text-stone-400 hover:text-amber-400 hover:border-amber-400/50 transition-all bg-stone-900 shadow-2xs"
+                title="Instagram Community Link"
+              >
+                <Instagram className="w-3.5 h-3.5" />
+              </a>
+              <a
+                href="https://twitter.com/brineandbite"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-7 h-7 rounded-none border border-stone-800 flex items-center justify-center text-stone-400 hover:text-amber-400 hover:border-amber-400/50 transition-all bg-stone-900 shadow-2xs"
+                title="Twitter dispatch channels"
+              >
+                <Twitter className="w-3.5 h-3.5" />
+              </a>
+              <a
+                href="https://pinterest.com/brineandbite"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-7 h-7 rounded-none border border-stone-800 flex items-center justify-center text-stone-400 hover:text-amber-400 hover:border-amber-400/50 transition-all bg-stone-900 shadow-2xs"
+                title="Pinterest preservation boards"
+              >
+                <Pin className="w-3.5 h-3.5 rotate-45" />
+              </a>
+            </div>
+            <div className="text-[10px] text-stone-504 font-mono pt-1">
               © 2026 Brine &amp; Bite Corporates. Made with pride by local pickleheads.
             </div>
           </div>

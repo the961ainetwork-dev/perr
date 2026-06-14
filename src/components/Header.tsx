@@ -1,6 +1,6 @@
 import React from "react";
 import { useApp } from "../context/AppContext";
-import { ShoppingCart, ChefHat, Store, Shield, User, Compass, HelpCircle } from "lucide-react";
+import { ShoppingCart, ChefHat, Store, Shield, User, Compass, HelpCircle, Search, X } from "lucide-react";
 
 interface HeaderProps {
   activeTab: string;
@@ -9,7 +9,7 @@ interface HeaderProps {
 }
 
 export default function Header({ activeTab, setActiveTab, openCart }: HeaderProps) {
-  const { cart, userRole, setUserRole } = useApp();
+  const { cart, userRole, setUserRole, headerSearchQuery, setHeaderSearchQuery } = useApp();
   
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
@@ -67,7 +67,7 @@ export default function Header({ activeTab, setActiveTab, openCart }: HeaderProp
         {/* Logo */}
         <div 
           onClick={() => setActiveTab("market")} 
-          className="flex items-center gap-3 cursor-pointer select-none group"
+          className="flex items-center gap-3 cursor-pointer select-none group shrink-0"
           id="branding-logo"
         >
           <div className="font-serif text-2xl font-black italic tracking-tighter text-editorial-charcoal group-hover:text-editorial-red transition-colors">
@@ -80,6 +80,36 @@ export default function Header({ activeTab, setActiveTab, openCart }: HeaderProp
             <span className="text-[8px] font-mono uppercase tracking-widest text-[#C1121F] font-semibold block mt-0.5">
               Vinegar &amp; Heat
             </span>
+          </div>
+        </div>
+
+        {/* Real-time Global Search Bar */}
+        <div className="flex-1 max-w-[150px] sm:max-w-[220px] md:max-w-[180px] lg:max-w-[280px] xl:max-w-md relative group/search mx-1 md:mx-4" id="header-search-container">
+          <div className="relative flex items-center">
+            <Search className="absolute left-2.5 w-3.5 h-3.5 text-editorial-charcoal/40 group-focus-within/search:text-[#C1121F] transition-colors pointer-events-none" />
+            <input
+              type="text"
+              id="header-search-bar"
+              value={headerSearchQuery}
+              onChange={(e) => {
+                const val = e.target.value;
+                setHeaderSearchQuery(val);
+                if (val && activeTab !== "market") {
+                  setActiveTab("market");
+                }
+              }}
+              placeholder="Search name, category, ingredients..."
+              className="w-full h-8 pl-8 pr-7 bg-editorial-gray/40 border border-editorial-charcoal/15 text-[10.5px] font-mono tracking-tight text-editorial-charcoal placeholder-editorial-charcoal/30 focus:outline-none focus:border-[#C1121F] focus:bg-white transition-all rounded-none shadow-3xs"
+            />
+            {headerSearchQuery && (
+              <button
+                onClick={() => setHeaderSearchQuery("")}
+                className="absolute right-2 p-0.5 text-editorial-charcoal/45 hover:text-[#C1121F] transition-colors cursor-pointer"
+                title="Clear global search"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
         </div>
 

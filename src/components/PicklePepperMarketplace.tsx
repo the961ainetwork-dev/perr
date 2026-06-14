@@ -11,10 +11,11 @@ interface MarketplaceProps {
 }
 
 export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, categoryFilter = "all" }: MarketplaceProps) {
-  const { products, recipes, reviews, addReview, addToCart, wishlist, toggleWishlist } = useApp();
+  const { products, recipes, reviews, addReview, addToCart, wishlist, toggleWishlist, headerSearchQuery, setHeaderSearchQuery } = useApp();
 
-  // Filters State
-  const [search, setSearch] = useState("");
+  // Filters State (Synchronized with Header)
+  const search = headerSearchQuery;
+  const setSearch = setHeaderSearchQuery;
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedSpice, setSelectedSpice] = useState<string>("all");
   const [selectedSort, setSelectedSort] = useState<string>("default");
@@ -80,11 +81,14 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
   const filteredProducts = useMemo(() => {
     return products
       .filter((p) => {
-        const matchesSearch =
-          p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.description.toLowerCase().includes(search.toLowerCase()) ||
-          p.sellerName.toLowerCase().includes(search.toLowerCase()) ||
-          p.tags.some((t) => t.toLowerCase().includes(search.toLowerCase()));
+        const query = search.trim().toLowerCase();
+        const matchesSearch = !query ||
+          p.name.toLowerCase().includes(query) ||
+          p.category.toLowerCase().includes(query) ||
+          (p.ingredients || []).some((ing) => ing.toLowerCase().includes(query)) ||
+          p.description.toLowerCase().includes(query) ||
+          p.sellerName.toLowerCase().includes(query) ||
+          p.tags.some((t) => t.toLowerCase().includes(query));
 
         const matchesCategory =
           selectedCategory === "all" || p.category === selectedCategory;
