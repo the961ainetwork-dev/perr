@@ -9,9 +9,18 @@ interface MarketplaceProps {
   searchTerm?: string;
   categoryFilter?: "pickle" | "pepper" | "all";
   onOpenCart?: () => void;
+  selectedProductId?: string | null;
+  onClearSelectedProduct?: () => void;
 }
 
-export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, categoryFilter = "all", onOpenCart }: MarketplaceProps) {
+export default function PicklePepperMarketplace({ 
+  onSelectRecipe, 
+  onSetTab, 
+  categoryFilter = "all", 
+  onOpenCart,
+  selectedProductId,
+  onClearSelectedProduct
+}: MarketplaceProps) {
   const { products, recipes, reviews, addReview, addToCart, wishlist, toggleWishlist, headerSearchQuery, setHeaderSearchQuery } = useApp();
 
   // Filters State (Synchronized with Header)
@@ -41,6 +50,7 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
 
   // Product Selection Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [nutritionProduct, setNutritionProduct] = useState<Product | null>(null);
   
   // Tab within Product Details Modal
   const [modalTab, setModalTab] = useState<"details" | "ingredients" | "reviews" | "recipes">("details");
@@ -51,6 +61,22 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
   const [reviewComment, setReviewComment] = useState("");
   const [reviewSuccess, setReviewSuccess] = useState(false);
 
+  // Compare products state
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+
+  const toggleCompareSet = (productId: string) => {
+    setCompareIds((prev) => {
+      if (prev.includes(productId)) {
+        return prev.filter((id) => id !== productId);
+      }
+      if (prev.length >= 4) {
+        return prev; // Limit to 4 for clean comparative presentation columns
+      }
+      return [...prev, productId];
+    });
+  };
+
   // Synchronize category selection if prop is toggled by Hero click
   React.useEffect(() => {
     if (categoryFilter !== "all") {
@@ -59,6 +85,20 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
       setSelectedCategory("all");
     }
   }, [categoryFilter]);
+
+  // Synchronize deep-linked selected product ID from global search
+  React.useEffect(() => {
+    if (selectedProductId) {
+      const found = products.find((p) => p.id === selectedProductId);
+      if (found) {
+        setSelectedProduct(found);
+        setModalTab("details");
+        if (onClearSelectedProduct) {
+          onClearSelectedProduct();
+        }
+      }
+    }
+  }, [selectedProductId, products, onClearSelectedProduct]);
 
   // Spice level colors
   const getSpiceColor = (spice: Product["spiceLevel"]) => {
@@ -131,6 +171,15 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
         if (selectedSort === "price-asc") return a.price - b.price;
         if (selectedSort === "price-desc") return b.price - a.price;
         if (selectedSort === "rating") return b.rating - a.rating;
+        if (selectedSort === "spice") {
+          const spiceRanks: Record<string, number> = { Extreme: 4, Hot: 3, Medium: 2, Mild: 1, None: 0 };
+          return spiceRanks[b.spiceLevel] - spiceRanks[a.spiceLevel];
+        }
+        if (selectedSort === "newest") {
+          const idA = parseInt(a.id.replace("prod-", "")) || 0;
+          const idB = parseInt(b.id.replace("prod-", "")) || 0;
+          return idB - idA;
+        }
         return 0; // default order
       });
   }, [products, search, selectedCategory, selectedSpice, selectedSort, showOnlyWishlist, wishlist, pricePreset, customMaxPrice]);
@@ -202,7 +251,9 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
               <option value="default">Default Harvests</option>
               <option value="price-asc">Price: Low to High</option>
               <option value="price-desc">Price: High to Low</option>
-              <option value="rating">Top Rated Reviews</option>
+              <option value="rating">Top Rated</option>
+              <option value="spice">Most Spicy 🌶️</option>
+              <option value="newest">Newest Arrivals ✨</option>
             </select>
           </div>
         </div>
@@ -441,6 +492,12 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
                     </span>
                   )}
 
+                  {p.isSeasonal && (
+                    <span className={`absolute ${p.isDropshipped ? 'bottom-11' : 'bottom-3'} left-3 bg-[#E65F2B] text-white border border-[#E65F2B]/10 text-[8.5px] font-mono uppercase tracking-widest font-bold px-2.5 py-1 rounded-none shadow-2xs z-15 animate-pulse`}>
+                      🍂 Seasonal Release
+                    </span>
+                  )}
+
                   {/* Stock Alert Badge */}
                   {hasLowStock && p.stock > 0 && (
                     <span className="absolute top-13 right-3 bg-[#C1121F] text-white text-[9px] uppercase tracking-widest font-bold px-2.5 py-1 rounded-none font-mono z-10 shadow-2xs">
@@ -473,18 +530,47 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
                     </p>
                   </div>
 
-                  {/* Rating summary */}
-                  <div className="flex items-center gap-1.5 pt-1">
-                    <div className="flex text-editorial-red">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-3 h-3 ${i < Math.floor(p.rating) ? "fill-current" : "text-stone-200"}`}
-                        />
-                      ))}
+                  {/* Rating summary with clickable micro nutrition view trigger */}
+                  <div className="flex items-center justify-between gap-1.5 pt-1">
+                    <div className="flex items-center gap-1.5">
+                      <div className="flex text-editorial-red">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3 h-3 ${i < Math.floor(p.rating) ? "fill-current" : "text-stone-200"}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-[11px] font-bold text-editorial-charcoal font-sans">{p.rating}</span>
                     </div>
-                    <span className="text-[11px] font-bold text-editorial-charcoal font-sans">{p.rating}</span>
-                    <span className="text-[9px] text-[#1A1A1A]/40 uppercase font-mono tracking-wide">({p.reviewsCount} reviews)</span>
+
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleCompareSet(p.id);
+                        }}
+                        className={`text-[9.5px] font-mono uppercase tracking-widest font-black transition-all flex items-center gap-1 border px-2 py-1 cursor-pointer ${
+                          compareIds.includes(p.id)
+                            ? "bg-[#C1121F] text-white border-[#C1121F] shadow-2xs"
+                            : "bg-white text-editorial-charcoal/70 border-editorial-charcoal/15 hover:bg-stone-50"
+                        }`}
+                        title={compareIds.includes(p.id) ? "Remove from comparison matrix" : "Compare this specimen side-by-side"}
+                      >
+                        ⚖️ {compareIds.includes(p.id) ? "In Set" : "Compare"}
+                      </button>
+
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNutritionProduct(p);
+                        }}
+                        className="text-[9.5px] font-mono uppercase tracking-widest font-black text-[#C1121F] hover:text-editorial-charcoal hover:underline transition-all flex items-center gap-1 bg-stone-50 border border-editorial-charcoal/10 px-2 py-1 cursor-pointer"
+                        title="View simulated nutritional breakdowns"
+                      >
+                        🔬 Facts
+                      </button>
+                    </div>
                   </div>
 
                   {/* Line partition */}
@@ -581,6 +667,18 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
                         <>Fermentation craft by certified master: <span className="text-editorial-charcoal font-bold">{selectedProduct.sellerName}</span></>
                       )}
                     </span>
+
+                    {selectedProduct.isSeasonal && (
+                      <div id="seasonal-priority-alert" className="mt-3 bg-[#FAF3EE] border-l-3 border-[#E65F2B] px-4 py-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2 animate-pulse">
+                        <div className="space-y-0.5">
+                          <span className="text-[#E65F2B] text-[10px] font-mono font-black uppercase tracking-wider block">🍂 Limited Seasonal Harvest</span>
+                          <span className="text-[11px] text-stone-700 font-sans italic">Custom batch compiled only once a year. Buy before the harvest is retired.</span>
+                        </div>
+                        <span className="text-[8.5px] font-mono uppercase font-bold text-white bg-[#E65F2B] px-2 py-0.5 rounded-none self-start sm:self-auto shrink-0 tracking-widest">
+                          Urgent Release
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-4">
@@ -589,6 +687,16 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
                     <span className={`text-xs ml-auto font-mono uppercase tracking-wider font-bold ${selectedProduct.stock > 10 ? "text-editorial-green" : "text-[#C1121F] animate-pulse"}`}>
                       {selectedProduct.stock > 0 ? `Stock: ${selectedProduct.stock}` : "Sold Out"}
                     </span>
+                  </div>
+
+                  {/* Visual trigger to view Nutrition facts from details screen */}
+                  <div className="flex justify-start">
+                    <button
+                      onClick={() => setNutritionProduct(selectedProduct)}
+                      className="px-3 py-1.5 border border-[#C1121F] text-[#C1121F] bg-[#FAF9F6] text-[10px] font-mono uppercase font-black tracking-wider hover:bg-[#C1121F] hover:text-white transition-all rounded-none flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>📊 View Nutrition & Ingredient Facts</span>
+                    </button>
                   </div>
 
                   {/* Dynamic internal tabs switcher */}
@@ -834,6 +942,438 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* NUTRITION FACTS MODAL */}
+      {nutritionProduct && (() => {
+        const nut = (() => {
+          const isPickle = nutritionProduct.category === "pickle";
+          const isPepper = nutritionProduct.category === "pepper";
+          const isOil = nutritionProduct.category === "oil";
+          
+          let calories = 5;
+          let totalFat = 0;
+          let satFat = 0;
+          let sodium = 290;
+          let carbo = 2;
+          let sugar = 1;
+          let protein = 0;
+          let servingSize = "1 oz (28g)";
+          let servingsPerContainer = 16;
+          
+          if (isOil) {
+            calories = 120;
+            totalFat = 14;
+            satFat = 2;
+            sodium = 0;
+            carbo = 0;
+            sugar = 0;
+            protein = 0;
+            servingSize = "1 tbsp (15mL)";
+            servingsPerContainer = 32;
+          } else if (isPepper) {
+            calories = 15;
+            totalFat = 0.2;
+            satFat = 0;
+            sodium = 140;
+            carbo = 3;
+            sugar = 2;
+            protein = 0.5;
+            servingSize = "5-6 slices (30g)";
+            servingsPerContainer = 12;
+          } else if (nutritionProduct.category === "starter") {
+            calories = 0;
+            totalFat = 0;
+            satFat = 0;
+            sodium = 200;
+            carbo = 1;
+            sugar = 0.5;
+            protein = 0;
+            servingSize = "1/4 tsp (1.2g)";
+            servingsPerContainer = 120;
+          }
+
+          const multiplier = (nutritionProduct.id.charCodeAt(0) % 5) * 2;
+          if (!isOil && calories > 0) {
+            calories += multiplier;
+          }
+          if (sodium > 0) {
+            sodium += (nutritionProduct.id.charCodeAt(1) % 4) * 15;
+          }
+          if (carbo > 0) {
+            carbo += (nutritionProduct.id.charCodeAt(2) % 3) * 0.5;
+          }
+
+          return {
+            calories,
+            totalFat,
+            satFat,
+            sodium,
+            carbo,
+            sugar,
+            protein,
+            servingSize,
+            servingsPerContainer
+          };
+        })();
+
+        // Calculate % values
+        const totalFatDV = Math.round((nut.totalFat / 65) * 100);
+        const satFatDV = Math.round((nut.satFat / 20) * 100);
+        const sodiumDV = Math.round((nut.sodium / 2400) * 100);
+        const carboDV = Math.round((nut.carbo / 300) * 100);
+
+        return (
+          <div className="fixed inset-0 z-[100] overflow-y-auto bg-editorial-charcoal/40 backdrop-blur-2xs flex items-center justify-center p-4">
+            <div 
+              className="bg-white rounded-none max-w-sm w-full border-2 border-editorial-charcoal overflow-hidden animate-in fade-in zoom-in-95 duration-200 shadow-xl p-5 md:p-6"
+              id="nutrition-facts-modal"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between pb-3 border-b border-stone-200">
+                <span className="text-[10px] font-mono uppercase tracking-widest font-black text-stone-400">Gourmet Verification Panel</span>
+                <button
+                  onClick={() => setNutritionProduct(null)}
+                  className="p-1 text-stone-400 hover:text-editorial-charcoal transition-colors border border-transparent hover:border-editorial-charcoal/10"
+                  aria-label="Close nutrition Facts modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Classic Black-Box FDA Label */}
+              <div className="border-[3px] border-black p-3.5 text-left font-sans text-black mt-4 bg-white select-none">
+                <h2 className="font-extrabold text-3xl leading-none uppercase tracking-tight font-[Helvetica,Arial,sans-serif]">
+                  Nutrition Facts
+                </h2>
+                
+                <div className="text-xs border-b-[5px] border-black pt-1 pb-1">
+                  <div>{nut.servingsPerContainer} servings per container</div>
+                  <div className="flex justify-between font-bold">
+                    <span>Serving size</span>
+                    <span>{nut.servingSize}</span>
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-baseline border-b-[9px] border-black py-1">
+                  <div className="flex flex-col">
+                    <span className="text-[10px] uppercase font-bold">Amount per serving</span>
+                    <span className="text-2xl font-black uppercase leading-none">Calories</span>
+                  </div>
+                  <span className="text-4xl font-black leading-none">{nut.calories}</span>
+                </div>
+
+                {/* % Daily Value Column Header */}
+                <div className="text-right text-[10px] font-bold border-b border-black py-1 uppercase tracking-wider">
+                  % Daily Value*
+                </div>
+
+                {/* Fats breakdown */}
+                <div className="border-b border-black py-1 text-xs">
+                  <div className="flex justify-between">
+                    <span>
+                      <strong className="font-extrabold">Total Fat</strong> {nut.totalFat}g
+                    </span>
+                    <strong className="font-extrabold">{totalFatDV}%</strong>
+                  </div>
+                  <div className="pl-4 flex justify-between text-stone-700 font-sans">
+                    <span>Saturated Fat {nut.satFat}g</span>
+                    <span>{satFatDV}%</span>
+                  </div>
+                  <div className="pl-4 text-stone-700 italic font-sans">
+                    Trans Fat 0g
+                  </div>
+                </div>
+
+                {/* Sodium */}
+                <div className="border-b border-black py-1 text-xs flex justify-between">
+                  <span>
+                    <strong className="font-extrabold">Sodium</strong> {nut.sodium}mg
+                  </span>
+                  <strong className="font-extrabold">{sodiumDV}%</strong>
+                </div>
+
+                {/* Carbohydrates */}
+                <div className="border-b border-black py-1 text-xs font-sans">
+                  <div className="flex justify-between">
+                    <span>
+                      <strong className="font-extrabold">Total Carbohydrate</strong> {nut.carbo}g
+                    </span>
+                    <strong className="font-extrabold">{carboDV}%</strong>
+                  </div>
+                  <div className="pl-4 flex justify-between text-stone-700 font-sans">
+                    <span>Total Sugars {nut.sugar}g</span>
+                    <span>--</span>
+                  </div>
+                </div>
+
+                {/* Protein */}
+                <div className="border-b-[5px] border-black py-1 text-xs flex justify-between">
+                  <span>
+                    <strong className="font-extrabold">Protein</strong> {nut.protein}g
+                  </span>
+                  <span>--</span>
+                </div>
+
+                {/* Footer disclaimer */}
+                <div className="text-[8.5px] leading-snug pt-2 text-[#222]">
+                  * The % Daily Value (DV) tells you how much a nutrient in a serving of food contributes to a daily diet. 2,000 calories a day is used for general nutrition advice.
+                </div>
+              </div>
+
+              {/* Elements & Ingredients summary below label */}
+              <div className="mt-4 pt-4 border-t border-stone-200 text-left space-y-2">
+                <span className="text-[9px] font-mono uppercase tracking-widest text-[#C1121F] font-bold block">Specimen Elements:</span>
+                <p className="text-[11px] text-stone-600 leading-relaxed font-sans font-medium italic">
+                  {nutritionProduct.ingredients.join(", ")}
+                </p>
+                <div className="text-[8.5px] font-mono text-stone-400">
+                  Verified organic crop sourcing certified by {nutritionProduct.sellerName}.
+                </div>
+              </div>
+
+              {/* Footer CTA */}
+              <div className="mt-5 pt-3 border-t border-stone-200">
+                <button
+                  onClick={() => setNutritionProduct(null)}
+                  className="w-full py-2 bg-stone-900 text-white rounded-none text-xs font-mono uppercase tracking-widest font-black hover:bg-[#C1121F] hover:text-white transition-all cursor-pointer"
+                >
+                  Dismiss Panel
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Floating Sticky comparison launcher bar when compareIds are present */}
+      {compareIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-2xl p-3 md:p-4 max-w-lg w-[calc(100%-2rem)] flex items-center justify-between gap-4 animate-in slide-in-from-bottom-4 duration-300">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">⚖️</span>
+            <div>
+              <span className="text-[10px] font-mono uppercase font-black tracking-widest text-[#C1121F] block">Comparison Matrix Set</span>
+              <span className="text-[11px] text-[#1A1A1A]/80 font-sans italic leading-none">{compareIds.length} {compareIds.length === 1 ? "specimen" : "specimens"} selected <span className="text-[9px] text-[#C1121F] font-mono font-bold">(max: 4)</span></span>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={() => setCompareIds([])}
+              className="px-2.5 py-1.5 border border-editorial-charcoal/15 text-stone-500 hover:text-editorial-charcoal text-[10px] font-mono uppercase tracking-wider hover:bg-stone-50 transition-colors cursor-pointer"
+            >
+              Clear
+            </button>
+            <button
+              onClick={() => setIsCompareOpen(true)}
+              className="px-4 py-1.5 bg-editorial-charcoal hover:bg-[#C1121F] text-editorial-cream hover:text-white text-[10px] font-mono uppercase tracking-widest font-bold transition-all shadow-xs cursor-pointer"
+            >
+              Compare Now
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* SIDE-BY-SIDE COMPARISON MODAL DIALOGUE */}
+      {isCompareOpen && (
+        <div className="fixed inset-0 z-50 bg-editorial-charcoal/45 backdrop-blur-2xs flex items-center justify-center p-4">
+          <div 
+            className="bg-[#FAF9F6] rounded-none max-w-4xl w-full border-2 border-editorial-charcoal overflow-hidden animate-in fade-in zoom-in-95 duration-200 shadow-2xl flex flex-col"
+            id="comparison-matrix-modal"
+          >
+            {/* Modal Header */}
+            <div className="p-4 border-b-2 border-editorial-charcoal bg-white flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">⚖️</span>
+                <div>
+                  <h3 className="font-serif italic text-base font-black text-editorial-charcoal">Specimen Feature Matrix</h3>
+                  <p className="text-[10px] uppercase font-mono tracking-wider text-stone-400">Side-by-side craft fermentation parameters &amp; physical features</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsCompareOpen(false)}
+                className="p-1 text-editorial-charcoal/50 hover:text-[#C1121F] hover:bg-stone-50 border border-transparent hover:border-editorial-charcoal/15 transition-all"
+                title="Close Comparison Sheet"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body: Comparison Table */}
+            <div className="p-4 md:p-6 overflow-y-auto max-h-[80vh] space-y-4">
+              {compareIds.length === 0 ? (
+                <div className="text-center py-10 space-y-2">
+                  <p className="text-xs text-stone-500 italic">No specimen profiles inside your selection.</p>
+                  <p className="text-[9px] font-mono uppercase tracking-widest text-[#C1121F]">Click "Compare" on marketplace specimens to select</p>
+                </div>
+              ) : (() => {
+                const comparedProducts = products.filter((p) => compareIds.includes(p.id));
+
+                return (
+                  <div className="overflow-x-auto border border-editorial-charcoal/15 bg-white shadow-sm">
+                    <table className="w-full border-collapse text-left text-xs text-editorial-charcoal table-fixed min-w-[640px]">
+                      <thead>
+                        <tr className="bg-editorial-gray/60 border-b border-editorial-charcoal/15">
+                          <th className="p-3 font-mono text-[9px] uppercase tracking-widest text-editorial-charcoal/50 w-36 border-r border-editorial-charcoal/10">Feature Metric</th>
+                          {comparedProducts.map((p) => (
+                            <th key={p.id} className="p-3 border-r border-editorial-charcoal/10 relative last:border-r-0">
+                              <button
+                                onClick={() => toggleCompareSet(p.id)}
+                                className="absolute top-2 right-2 p-1 text-stone-400 hover:text-[#C1121F] transition-colors cursor-pointer"
+                                title="Dismiss Specimen"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                              <div className="flex flex-col items-center text-center p-1 space-y-2 mt-2">
+                                <img
+                                  src={p.image}
+                                  alt={p.name}
+                                  className="w-16 h-16 object-cover border border-editorial-charcoal/10 shadow-3xs"
+                                  referrerPolicy="no-referrer"
+                                />
+                                <div>
+                                  <span className="block text-[8px] font-mono uppercase text-[#C1121F] font-bold leading-none mb-1">{p.category} batch</span>
+                                  <span className="block font-serif font-bold italic text-stone-900 text-xs line-clamp-2 md:leading-tight">{p.name}</span>
+                                </div>
+                              </div>
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-editorial-charcoal/10">
+                        {/* Row: Price */}
+                        <tr>
+                          <td className="p-3 font-mono text-[9px] uppercase tracking-widest text-editorial-charcoal/50 font-bold bg-editorial-gray/25 border-r border-editorial-charcoal/10">Price &amp; Size</td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} className="p-3 border-r border-editorial-charcoal/10 last:border-r-0">
+                              <span className="block text-sm font-serif font-black text-editorial-red">${p.price.toFixed(2)}</span>
+                              <span className="block text-[9px] font-mono text-stone-400 uppercase mt-0.5">{p.size || "16 oz Jar"}</span>
+                            </td>
+                          ))}
+                        </tr>
+                        {/* Row: Heat & Spice */}
+                        <tr>
+                          <td className="p-3 font-mono text-[9px] uppercase tracking-widest text-editorial-charcoal/50 font-bold bg-editorial-gray/25 border-r border-editorial-charcoal/10">Heat Index</td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} className="p-3 border-r border-editorial-charcoal/10 last:border-r-0">
+                              <span className={`px-2 py-0.5 text-[8px] font-mono uppercase tracking-widest font-black border ${getSpiceColor(p.spiceLevel)}`}>
+                                {getSpiceFlame(p.spiceLevel)} {p.spiceLevel}
+                              </span>
+                            </td>
+                          ))}
+                        </tr>
+                        {/* Row: Rating */}
+                        <tr>
+                          <td className="p-3 font-mono text-[9px] uppercase tracking-widest text-editorial-charcoal/50 font-bold bg-editorial-gray/25 border-r border-editorial-charcoal/10">Rating Score</td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} className="p-3 border-r border-editorial-charcoal/10 last:border-r-0">
+                              <div className="flex items-center gap-1 font-mono">
+                                <span className="text-xs font-bold text-stone-900">★ {p.rating}</span>
+                                <span className="text-[10px] text-stone-400">({p.reviewsCount} reviews)</span>
+                              </div>
+                            </td>
+                          ))}
+                        </tr>
+                        {/* Row: Provenance */}
+                        <tr>
+                          <td className="p-3 font-mono text-[9px] uppercase tracking-widest text-editorial-charcoal/50 font-bold bg-editorial-gray/25 border-r border-editorial-charcoal/10">Sourcing &amp; Maker</td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} className="p-3 border-r border-editorial-charcoal/10 last:border-r-0 text-[11px] font-sans">
+                              <span className="font-bold block text-stone-800 leading-none">{p.isDropshipped ? "🌍 Direct Import" : "🏡 Local Craft"}</span>
+                              <span className="text-stone-500 text-[10px] italic">{p.isDropshipped ? p.supplierName : p.sellerName}</span>
+                            </td>
+                          ))}
+                        </tr>
+                        {/* Row: Ingredients */}
+                        <tr>
+                          <td className="p-3 font-mono text-[9px] uppercase tracking-widest text-editorial-charcoal/50 font-bold bg-editorial-gray/25 border-r border-editorial-charcoal/10">Recipe Blend</td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} className="p-3 border-r border-editorial-charcoal/10 last:border-r-0 text-[10.5px] text-stone-600 font-sans leading-relaxed italic max-h-[120px] overflow-y-auto">
+                              <span className="line-clamp-4 hover:line-clamp-none block transition-all">{p.ingredients.join(", ")}</span>
+                            </td>
+                          ))}
+                        </tr>
+                        {/* Row: Tags */}
+                        <tr>
+                          <td className="p-3 font-mono text-[9px] uppercase tracking-widest text-editorial-charcoal/50 font-bold bg-editorial-gray/25 border-r border-editorial-charcoal/10">Guiding Badges</td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} className="p-3 border-r border-editorial-charcoal/10 last:border-r-0">
+                              <div className="flex flex-wrap gap-1">
+                                {p.tags.map((t, idx) => (
+                                  <span key={idx} className="text-[8px] font-mono uppercase bg-neutral-100 text-[#1a1a1a] border border-stone-200 px-1.5 py-0.5 rounded-none">
+                                    {t}
+                                  </span>
+                                ))}
+                                {p.isSeasonal && (
+                                  <span className="text-[8px] font-mono uppercase bg-[#FAF3EE] text-[#E65F2B] border border-[#E65F2B]/20 px-1.5 py-0.5 rounded-none font-bold">
+                                    Seasonal
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                          ))}
+                        </tr>
+                        {/* Row: Stock */}
+                        <tr>
+                          <td className="p-3 font-mono text-[9px] uppercase tracking-widest text-editorial-charcoal/50 font-bold bg-editorial-gray/25 border-r border-editorial-charcoal/10">Status &amp; Stock</td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} className="p-3 border-r border-editorial-charcoal/10 last:border-r-0 text-[10.5px] font-mono">
+                              {p.stock > 0 ? (
+                                <span className="text-editorial-green font-bold">In Stock ({p.stock} left)</span>
+                              ) : (
+                                <span className="text-[#C1121F] font-bold">Sold Out</span>
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                        {/* Row: Action CTAs */}
+                        <tr>
+                          <td className="p-3 bg-editorial-gray/25 border-r border-editorial-charcoal/10 font-mono text-[9px] text-[#C1121F] font-bold">Direct Basket</td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} className="p-3 border-r border-editorial-charcoal/10 last:border-r-0 text-center">
+                              {p.stock > 0 ? (
+                                <button
+                                  onClick={() => {
+                                    addToCart(p, 1);
+                                    onOpenCart?.();
+                                  }}
+                                  className="bg-editorial-charcoal hover:bg-[#C1121F] text-editorial-cream hover:text-white transition-all w-full py-2 px-1 text-[9px] font-mono uppercase tracking-widest font-black rounded-none shadow-3xs cursor-pointer"
+                                >
+                                  Add to Basket
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  disabled
+                                  className="bg-stone-100 text-stone-400 border border-stone-200/50 w-full py-2 px-1 text-[9px] font-mono uppercase text-center cursor-not-allowed"
+                                >
+                                  Sold Out
+                                </button>
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-4 border-t border-editorial-charcoal/15 bg-white flex items-center justify-between">
+              <span className="text-[9px] font-mono uppercase tracking-widest text-stone-400 font-bold">
+                * Features synced directly with master fermentation catalog
+              </span>
+              <button
+                onClick={() => setIsCompareOpen(false)}
+                className="px-5 py-2.5 bg-editorial-charcoal hover:bg-[#C1121F] text-editorial-cream hover:text-white text-xs font-mono uppercase tracking-widest font-black rounded-none shadow-sm cursor-pointer transition-all"
+              >
+                Dismiss Features Panel
+              </button>
+            </div>
           </div>
         </div>
       )}

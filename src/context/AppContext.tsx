@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Product, Recipe, Order, Review, CartItem, SellerProductSubmission, RecipeSubmission } from "../types";
+import { Product, Recipe, Order, Review, CartItem, SellerProductSubmission, RecipeSubmission, RecipeReview } from "../types";
 import {
   INITIAL_PRODUCTS,
   INITIAL_RECIPES,
@@ -7,6 +7,7 @@ import {
   INITIAL_REVIEWS,
   INITIAL_SELLER_SUBMISSIONS,
   INITIAL_RECIPE_SUBMISSIONS,
+  INITIAL_RECIPE_REVIEWS,
 } from "../data";
 
 export interface ToastMessage {
@@ -22,6 +23,7 @@ interface AppContextType {
   products: Product[];
   recipes: Recipe[];
   reviews: Review[];
+  recipeReviews: RecipeReview[];
   orders: Order[];
   cart: CartItem[];
   sellerSubmissions: SellerProductSubmission[];
@@ -44,6 +46,7 @@ interface AppContextType {
     paymentMethod: string;
   }) => Order;
   addReview: (productId: string, author: string, rating: number, comment: string) => void;
+  addRecipeReview: (recipeId: string, author: string, rating: number, comment: string) => void;
   submitSellerProduct: (sub: Omit<SellerProductSubmission, "id" | "status" | "createdAt">) => void;
   submitSellerRecipe: (sub: Omit<RecipeSubmission, "id" | "status" | "createdAt">) => void;
   approveProductSubmission: (id: string) => void;
@@ -58,6 +61,10 @@ interface AppContextType {
   headerSearchQuery: string;
   setHeaderSearchQuery: (query: string) => void;
   importDropshipProduct: (product: Product) => void;
+  bulkImportProducts: (newProducts: Product[]) => void;
+  bulkImportRecipes: (newRecipes: Recipe[]) => void;
+  bulkImportReviews: (newReviews: Review[]) => void;
+  resetAllToDefaults: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -71,7 +78,32 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const [recipes, setRecipes] = useState<Recipe[]>(() => {
     const saved = localStorage.getItem("p_m_recipes");
-    return saved ? JSON.parse(saved) : INITIAL_RECIPES;
+    const parsed: Recipe[] = saved ? JSON.parse(saved) : INITIAL_RECIPES;
+    const savedReviews = localStorage.getItem("p_m_recipe_reviews");
+    const activeReviews: RecipeReview[] = savedReviews ? JSON.parse(savedReviews) : INITIAL_RECIPE_REVIEWS;
+
+    return parsed.map((r) => {
+      const matchReviews = activeReviews.filter((rev) => rev.recipeId === r.id);
+      if (matchReviews.length > 0) {
+        const sum = matchReviews.reduce((acc, rev) => acc + rev.rating, 0);
+        const avg = parseFloat((sum / matchReviews.length).toFixed(1));
+        return {
+          ...r,
+          rating: avg,
+          reviewsCount: matchReviews.length
+        };
+      }
+      return {
+        ...r,
+        rating: r.rating || 0,
+        reviewsCount: r.reviewsCount || 0
+      };
+    });
+  });
+
+  const [recipeReviews, setRecipeReviews] = useState<RecipeReview[]>(() => {
+    const saved = localStorage.getItem("p_m_recipe_reviews");
+    return saved ? JSON.parse(saved) : INITIAL_RECIPE_REVIEWS;
   });
 
   const [reviews, setReviews] = useState<Review[]>(() => {
@@ -138,6 +170,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     localStorage.setItem("p_m_recipes", JSON.stringify(recipes));
   }, [recipes]);
+
+  useEffect(() => {
+    localStorage.setItem("p_m_recipe_reviews", JSON.stringify(recipeReviews));
+  }, [recipeReviews]);
 
   useEffect(() => {
     localStorage.setItem("p_m_reviews", JSON.stringify(reviews));
@@ -285,6 +321,36 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const addRecipeReview = (recipeId: string, author: string, rating: number, comment: string) => {
+    const newReview: RecipeReview = {
+      id: `rec-rev-${Date.now()}`,
+      recipeId,
+      author: author || "Curious Chef",
+      rating,
+      date: new Date().toISOString().split("T")[0],
+      comment,
+    };
+
+    setRecipeReviews((prev) => [newReview, ...prev]);
+
+    // Update Recipe Rating dynamically
+    setRecipes((prevRecipes) =>
+      prevRecipes.map((r) => {
+        if (r.id === recipeId) {
+          const matchingReviews = [newReview, ...recipeReviews.filter((rev) => rev.recipeId === recipeId)];
+          const sum = matchingReviews.reduce((acc, rev) => acc + rev.rating, 0);
+          const avg = parseFloat((sum / matchingReviews.length).toFixed(1));
+          return {
+            ...r,
+            rating: avg,
+            reviewsCount: matchingReviews.length,
+          };
+        }
+        return r;
+      })
+    );
+  };
+
   // SELLER SUBMISSIONS
   const submitSellerProduct = (sub: Omit<SellerProductSubmission, "id" | "status" | "createdAt">) => {
     const newSub: SellerProductSubmission = {
@@ -398,6 +464,81 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) => [newProduct, ...prev]);
   };
 
+  const bulkImportProducts = (newProducts: Product[]) => {
+    setProducts((prev) => {
+      const existingIds = new Set(prev.map(p => p.id));
+      const filtered = newProducts.filter(p => !existingIds.has(p.id));
+      return [...filtered, ...prev];
+    });
+    addToast({
+      title: "Products Populated",
+      message: `Successfully registered ${newProducts.length} new specimens into the live catalog.`,
+      type: "success"
+    });
+  };
+
+  const bulkImportRecipes = (newRecipes: Recipe[]) => {
+    setRecipes((prev) => {
+      const existingIds = new Set(prev.map(r => r.id));
+      const filtered = newRecipes.filter(r => !existingIds.has(r.id));
+      return [...filtered, ...prev];
+    });
+    addToast({
+      title: "Culinary Recipes Seeded",
+      message: `Enrolled ${newRecipes.length} new culinary formulas into the library database.`,
+      type: "success"
+    });
+  };
+
+  const bulkImportReviews = (newReviews: Review[]) => {
+    setReviews((prev) => [...newReviews, ...prev]);
+    setProducts((prevProducts) =>
+      prevProducts.map((p) => {
+        const productReviews = [...newReviews, ...reviews].filter((r) => r.productId === p.id);
+        if (productReviews.length === 0) return p;
+        const sum = productReviews.reduce((acc, r) => acc + r.rating, 0);
+        const avg = parseFloat((sum / productReviews.length).toFixed(1));
+        return {
+          ...p,
+          rating: avg,
+          reviewsCount: productReviews.length
+        };
+      })
+    );
+    addToast({
+      title: "Ratings Synchronized",
+      message: `Acquired and computed ${newReviews.length} client experience logs.`,
+      type: "info"
+    });
+  };
+
+  const resetAllToDefaults = () => {
+    localStorage.removeItem("p_m_products");
+    localStorage.removeItem("p_m_recipes");
+    localStorage.removeItem("p_m_reviews");
+    localStorage.removeItem("p_m_recipe_reviews");
+    localStorage.removeItem("p_m_orders");
+    localStorage.removeItem("p_m_seller_submissions");
+    localStorage.removeItem("p_m_recipe_submissions");
+    localStorage.removeItem("p_m_wishlist");
+    localStorage.removeItem("p_m_cart");
+
+    setProducts(INITIAL_PRODUCTS);
+    setRecipes(INITIAL_RECIPES);
+    setReviews(INITIAL_REVIEWS);
+    setRecipeReviews(INITIAL_RECIPE_REVIEWS);
+    setOrders(INITIAL_ORDERS);
+    setSellerSubmissions(INITIAL_SELLER_SUBMISSIONS);
+    setRecipeSubmissions(INITIAL_RECIPE_SUBMISSIONS);
+    setWishlist([]);
+    setCart([]);
+    addToast({
+      title: "Curation Reset",
+      message: "Database successfully cleared and repopulated with master specimens.",
+      type: "success"
+    });
+  };
+
   const toggleWishlist = (productId: string) => {
     setWishlist((prev) =>
       prev.includes(productId)
@@ -427,6 +568,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         clearCart,
         placeOrder,
         addReview,
+        addRecipeReview,
+        recipeReviews,
         submitSellerProduct,
         submitSellerRecipe,
         approveProductSubmission,
@@ -441,6 +584,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         headerSearchQuery,
         setHeaderSearchQuery,
         importDropshipProduct,
+        bulkImportProducts,
+        bulkImportRecipes,
+        bulkImportReviews,
+        resetAllToDefaults,
       }}
     >
       {children}

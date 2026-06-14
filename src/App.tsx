@@ -24,6 +24,9 @@ function MainAppContent() {
   // Deep-linking recipe ID passed to RecipeBook
   const [selectedRecipeId, setSelectedRecipeId] = useState<string | null>(null);
 
+  // Deep-linking product ID passed to marketplace
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
   // Cart / Checkout visual switches
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
@@ -99,6 +102,14 @@ function MainAppContent() {
             }
           }}
           openCart={() => setIsCartOpen(true)}
+          onSelectProduct={(productId) => {
+            setSelectedProductId(productId);
+            setActiveTab("market");
+          }}
+          onSelectRecipe={(recipeId) => {
+            setSelectedRecipeId(recipeId);
+            setActiveTab("recipes");
+          }}
         />
 
         {/* Dynamic Display Panels */}
@@ -116,6 +127,8 @@ function MainAppContent() {
                 onSetTab={setActiveTab}
                 categoryFilter={heroCategoryFilter}
                 onOpenCart={() => setIsCartOpen(true)}
+                selectedProductId={selectedProductId}
+                onClearSelectedProduct={() => setSelectedProductId(null)}
               />
             </div>
           )}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { useApp } from "../context/AppContext";
 import { ShoppingCart, ChefHat, Store, Shield, User, Compass, HelpCircle, Search, X, Coins } from "lucide-react";
 
@@ -6,11 +6,27 @@ interface HeaderProps {
   activeTab: string;
   setActiveTab: (tab: string) => void;
   openCart: () => void;
+  onSelectProduct?: (id: string) => void;
+  onSelectRecipe?: (id: string) => void;
 }
 
-export default function Header({ activeTab, setActiveTab, openCart }: HeaderProps) {
-  const { cart, userRole, setUserRole, headerSearchQuery, setHeaderSearchQuery } = useApp();
+export default function Header({ activeTab, setActiveTab, openCart, onSelectProduct, onSelectRecipe }: HeaderProps) {
+  const { cart, userRole, setUserRole, headerSearchQuery, setHeaderSearchQuery, products, recipes } = useApp();
   
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  const trimmedQuery = headerSearchQuery.trim().toLowerCase();
+  
+  const matchingProducts = useMemo(() => {
+    if (!trimmedQuery) return [];
+    return products.filter((p) => p.name.toLowerCase().includes(trimmedQuery));
+  }, [products, trimmedQuery]);
+
+  const matchingRecipes = useMemo(() => {
+    if (!trimmedQuery) return [];
+    return recipes.filter((r) => r.title.toLowerCase().includes(trimmedQuery));
+  }, [recipes, trimmedQuery]);
+
   const cartItemCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const tabs = [
@@ -84,10 +100,10 @@ export default function Header({ activeTab, setActiveTab, openCart }: HeaderProp
           </div>
         </div>
 
-        {/* Real-time Global Search Bar */}
-        <div className="flex-1 max-w-[150px] sm:max-w-[220px] md:max-w-[180px] lg:max-w-[280px] xl:max-w-md relative group/search mx-1 md:mx-4" id="header-search-container">
+        {/* Real-time Global Search Bar with Live Results Dropdown */}
+        <div className="flex-1 max-w-[150px] sm:max-w-[220px] md:max-w-[180px] lg:max-w-[280px] xl:max-w-md relative mx-1 md:mx-4" id="header-search-container">
           <div className="relative flex items-center">
-            <Search className="absolute left-2.5 w-3.5 h-3.5 text-editorial-charcoal/40 group-focus-within/search:text-[#C1121F] transition-colors pointer-events-none" />
+            <Search className="absolute left-2.5 w-3.5 h-3.5 text-editorial-charcoal/40 transition-colors pointer-events-none" />
             <input
               type="text"
               id="header-search-bar"
@@ -95,16 +111,18 @@ export default function Header({ activeTab, setActiveTab, openCart }: HeaderProp
               onChange={(e) => {
                 const val = e.target.value;
                 setHeaderSearchQuery(val);
-                if (val && activeTab !== "market") {
-                  setActiveTab("market");
-                }
+                setIsDropdownOpen(true);
               }}
+              onFocus={() => setIsDropdownOpen(true)}
               placeholder="Search name, category, ingredients..."
               className="w-full h-8 pl-8 pr-7 bg-editorial-gray/40 border border-editorial-charcoal/15 text-[10.5px] font-mono tracking-tight text-editorial-charcoal placeholder-editorial-charcoal/30 focus:outline-none focus:border-[#C1121F] focus:bg-white transition-all rounded-none shadow-3xs"
             />
             {headerSearchQuery && (
               <button
-                onClick={() => setHeaderSearchQuery("")}
+                onClick={() => {
+                  setHeaderSearchQuery("");
+                  setIsDropdownOpen(false);
+                }}
                 className="absolute right-2 p-0.5 text-editorial-charcoal/45 hover:text-[#C1121F] transition-colors cursor-pointer"
                 title="Clear global search"
               >
@@ -112,6 +130,134 @@ export default function Header({ activeTab, setActiveTab, openCart }: HeaderProp
               </button>
             )}
           </div>
+
+          {/* Floating Dropdown Results Popover */}
+          {trimmedQuery && isDropdownOpen && (
+            <>
+              {/* Invisible Fullscreen Backdrop to safely click out & close */}
+              <div 
+                className="fixed inset-0 z-40 bg-transparent" 
+                onClick={() => setIsDropdownOpen(false)}
+              />
+              
+              <div 
+                className="absolute top-full left-1/2 -translate-x-1/2 sm:translate-x-0 sm:left-0 mt-2 w-[280px] sm:w-[400px] bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-xl z-50 text-left"
+                id="header-search-dropdown"
+              >
+                <div className="p-2.5 border-b border-editorial-charcoal/15 bg-editorial-gray flex items-center justify-between">
+                  <span className="text-[9px] font-mono font-bold uppercase tracking-widest text-[#C1121F]">Search Results</span>
+                  <span className="text-[8px] font-mono uppercase text-editorial-charcoal/40">Found {matchingProducts.length + matchingRecipes.length} Matches</span>
+                </div>
+
+                <div className="max-h-[320px] overflow-y-auto divide-y divide-editorial-charcoal/10">
+                  
+                  {/* PRODUCTS MATCHES */}
+                  {matchingProducts.length > 0 && (
+                    <div>
+                      <div className="bg-editorial-gray/40 px-3 py-1 text-[8px] font-mono font-bold text-editorial-charcoal/50 uppercase tracking-widest">
+                        🛒 Marketplace Products ({matchingProducts.length})
+                      </div>
+                      <div className="p-1 space-y-0.5">
+                        {matchingProducts.map((p) => (
+                          <button
+                            key={p.id}
+                            onClick={() => {
+                              setIsDropdownOpen(false);
+                              setHeaderSearchQuery("");
+                              if (onSelectProduct) {
+                                onSelectProduct(p.id);
+                              } else {
+                                setActiveTab("market");
+                              }
+                            }}
+                            className="w-full text-left p-1.5 hover:bg-white flex items-center justify-between gap-3 group transition-colors cursor-pointer border border-transparent hover:border-editorial-charcoal/10"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <img 
+                                src={p.image} 
+                                alt={p.name} 
+                                className="w-7 h-7 object-cover border border-editorial-charcoal/10 shrink-0"
+                                referrerPolicy="no-referrer"
+                              />
+                              <div className="min-w-0">
+                                <span className="block text-xs font-serif italic text-editorial-charcoal font-bold truncate group-hover:text-[#C1121F] transition-colors leading-tight">
+                                  {p.name}
+                                </span>
+                                <span className="block text-[8px] font-mono uppercase text-editorial-charcoal/40 leading-none mt-0.5">
+                                  By {p.sellerName || p.supplierName} • {p.category}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <span className="block text-xs font-serif font-black text-editorial-charcoal">${p.price.toFixed(2)}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* RECIPES MATCHES */}
+                  {matchingRecipes.length > 0 && (
+                    <div>
+                      <div className="bg-editorial-gray/40 px-3 py-1 text-[8px] font-mono font-bold text-editorial-charcoal/50 uppercase tracking-widest">
+                        🍳 Cooking Recipes ({matchingRecipes.length})
+                      </div>
+                      <div className="p-1 space-y-0.5">
+                        {matchingRecipes.map((r) => (
+                          <button
+                            key={r.id}
+                            onClick={() => {
+                              setIsDropdownOpen(false);
+                              setHeaderSearchQuery("");
+                              if (onSelectRecipe) {
+                                onSelectRecipe(r.id);
+                              } else {
+                                setActiveTab("recipes");
+                              }
+                            }}
+                            className="w-full text-left p-1.5 hover:bg-white flex items-center justify-between gap-3 group transition-colors cursor-pointer border border-transparent hover:border-editorial-charcoal/10"
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="w-7 h-7 bg-editorial-charcoal text-editorial-cream flex items-center justify-center shrink-0 border border-editorial-charcoal">
+                                <ChefHat className="w-3.5 h-3.5 text-editorial-red" />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="block text-xs font-serif italic text-editorial-charcoal font-bold truncate group-hover:text-editorial-green transition-all leading-tight">
+                                  {r.title}
+                                </span>
+                                <span className="block text-[8px] font-mono uppercase text-editorial-charcoal/40 leading-none mt-0.5">
+                                  By {r.author} • {r.difficulty}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <span className="block text-[9px] font-mono font-bold text-editorial-green">{r.prepTime}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* NO MATCHES OVERLAY */}
+                  {matchingProducts.length === 0 && matchingRecipes.length === 0 && (
+                    <div className="p-6 text-center bg-white space-y-1">
+                      <p className="text-xs text-stone-500 italic">No products or culinary guides matched.</p>
+                      <p className="text-[7.5px] font-mono text-stone-400 uppercase tracking-widest">Check spelling or use ingredients query keywords</p>
+                    </div>
+                  )}
+
+                </div>
+
+                <div className="bg-editorial-gray px-2.5 py-1.5 border-t border-editorial-charcoal/10 text-center">
+                  <span className="text-[8px] font-mono uppercase text-[#C1121F] font-bold">
+                    Click an item to inspect specific specimen details
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Dynamic Center Tabs */}

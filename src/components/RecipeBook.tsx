@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useApp } from "../context/AppContext";
 import { Recipe, Product } from "../types";
-import { Search, Flame, Clock, Award, CheckCircle2, ShoppingCart, ArrowLeft, ArrowRight, User, Plus, Check, X } from "lucide-react";
+import { Search, Flame, Clock, Award, CheckCircle2, ShoppingCart, ArrowLeft, ArrowRight, User, Plus, Check, X, Printer, Star } from "lucide-react";
 
 interface RecipeBookProps {
   onSetTab: (tab: string) => void;
@@ -11,10 +11,16 @@ interface RecipeBookProps {
 }
 
 export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelectedRecipe, onOpenCart }: RecipeBookProps) {
-  const { recipes, products, addToCart } = useApp();
+  const { recipes, products, addToCart, recipeReviews, addRecipeReview } = useApp();
 
   // Selected recipe state
   const [activeRecipeId, setActiveRecipeId] = useState<string | null>(null);
+
+  // Recipe Review Form States
+  const [reviewName, setReviewName] = useState("");
+  const [reviewComment, setReviewComment] = useState("");
+  const [reviewRating, setReviewRating] = useState<number>(5);
+  const [reviewSuccess, setReviewSuccess] = useState(false);
 
   // Search & Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,6 +40,30 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
       onClearSelectedRecipe();
     }
   };
+
+  const handleRecipeReviewSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!activeRecipeId) return;
+    addRecipeReview(activeRecipeId, reviewName, reviewRating, reviewComment);
+    setReviewName("");
+    setReviewComment("");
+    setReviewRating(5);
+    setReviewSuccess(true);
+    setTimeout(() => setReviewSuccess(false), 5000);
+  };
+
+  // Trending Now recipes: highest ratings, limit 3
+  const trendingRecipes = useMemo(() => {
+    return [...recipes]
+      .filter((r) => r.approved && r.rating !== undefined && r.rating > 0)
+      .sort((a, b) => {
+        if ((b.rating || 0) !== (a.rating || 0)) {
+          return (b.rating || 0) - (a.rating || 0);
+        }
+        return (b.reviewsCount || 0) - (a.reviewsCount || 0);
+      })
+      .slice(0, 3);
+  }, [recipes]);
 
   // Filter recipes
   const filteredRecipes = useMemo(() => {
@@ -86,19 +116,35 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
       
       {/* 1. RECIPE EXPANDED DETAIL PAGE */}
       {activeRecipe ? (
-        <div className="space-y-8 text-left animate-in fade-in slide-in-from-bottom-2 duration-200">
-          
-          {/* Back link */}
-          <button
-            id="back-to-recipes-btn"
-            onClick={handleBackToList}
-            className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest font-bold text-editorial-charcoal bg-editorial-gray hover:bg-white border border-editorial-charcoal/15 hover:border-editorial-charcoal px-4 py-2 transition-all rounded-none"
-          >
-            <ArrowLeft className="w-3.5 h-3.5 text-editorial-red" />
-            <span>Back to Artisan Guide Catalog</span>
-          </button>
+        <>
+          {/* Action Toolbar on Screen */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-4 print:hidden">
+            {/* Back link */}
+            <button
+              id="back-to-recipes-btn"
+              onClick={handleBackToList}
+              className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest font-bold text-editorial-charcoal bg-editorial-gray hover:bg-white border border-editorial-charcoal/15 hover:border-editorial-charcoal px-4 py-2 transition-all rounded-none cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-editorial-red" />
+              <span>Back to Artisan Guide Catalog</span>
+            </button>
 
-          {/* Recipe Hero Masthead */}
+            {/* Print Recipe Button */}
+            <button
+              id="print-recipe-btn"
+              onClick={() => window.print()}
+              className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest font-bold text-[#FAF9F6] bg-[#C1121F] hover:bg-editorial-charcoal border border-transparent px-4 py-2.5 transition-all rounded-none cursor-pointer"
+              title="Print clean text-only card of this recipe"
+            >
+              <Printer className="w-3.5 h-3.5 text-[#FAF9F6]" />
+              <span>Print Recipe Card</span>
+            </button>
+          </div>
+
+          {/* Interactive Screen Details wrapper (hidden during browser print) */}
+          <div className="print:hidden space-y-8 text-left animate-in fade-in slide-in-from-bottom-2 duration-200">
+            
+            {/* Recipe Hero Masthead */}
           <div className="bg-editorial-charcoal text-editorial-cream rounded-none overflow-hidden relative border border-editorial-charcoal/40 min-h-[300px] flex items-end">
             <div className="absolute inset-0 bg-gradient-to-t from-black via-editorial-charcoal/50 to-transparent z-10"></div>
             <img
@@ -132,6 +178,17 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
                   <User className="w-3.5 h-3.5 text-editorial-red" />
                   <span>Curated by: <span className="text-white font-bold">{activeRecipe.author}</span></span>
                 </div>
+                {activeRecipe.rating !== undefined && activeRecipe.rating > 0 ? (
+                  <div className="flex items-center gap-1">
+                    <span className="text-amber-400 font-bold block text-sm leading-none -mt-1">★</span>
+                    <span>Rating: <span className="text-white font-bold">{activeRecipe.rating.toFixed(1)} / 5.0 ({activeRecipe.reviewsCount})</span></span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1">
+                    <span className="text-stone-400 font-bold block text-sm leading-none -mt-1">★</span>
+                    <span>Rating: <span className="text-[#a59f99] font-bold">Unrated</span></span>
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <Clock className="w-3.5 h-3.5 text-editorial-green" />
                   <span>Prep: <span className="text-white font-bold">{activeRecipe.prepTime}</span></span>
@@ -271,7 +328,181 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
 
           </div>
 
+          {/* Recipe Ratings & Feedback Section */}
+          <div className="border-t border-editorial-charcoal/15 pt-8 space-y-6">
+            <h3 className="font-serif text-xl font-bold tracking-tight text-editorial-charcoal italic text-left">
+              Artisan Guide Feedback &amp; Ratings
+            </h3>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              
+              {/* Left Side: Reviews List (takes 2 cols if wide) */}
+              <div className="md:col-span-2 space-y-4">
+                <h4 className="text-[10px] font-mono uppercase tracking-wider font-bold text-editorial-charcoal/60 pb-2 border-b border-editorial-charcoal/10 text-left">
+                  Reviews &amp; Culinary Advice ({recipeReviews.filter(rev => rev.recipeId === activeRecipe.id).length})
+                </h4>
+                
+                {recipeReviews.filter(rev => rev.recipeId === activeRecipe.id).length === 0 ? (
+                  <div className="bg-[#FAF9F6] p-6 text-center border border-editorial-charcoal/10">
+                    <p className="text-xs text-stone-500 italic">No feedback entries recorded for this map. Be the first to share your result!</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2">
+                    {recipeReviews
+                      .filter(rev => rev.recipeId === activeRecipe.id)
+                      .map((rev) => (
+                        <div key={rev.id} className="bg-white p-4 border border-editorial-charcoal/10 space-y-2 text-left">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-editorial-charcoal font-serif italic">{rev.author}</span>
+                            <span className="text-[9px] font-mono text-stone-400">{rev.date}</span>
+                          </div>
+                          
+                          {/* Stars */}
+                          <div className="flex items-center gap-0.5 text-amber-500">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-3 h-3 ${i < rev.rating ? "fill-current" : "text-stone-200"}`}
+                              />
+                            ))}
+                          </div>
+                          
+                          <p className="text-stone-700 text-xs leading-relaxed font-sans">
+                            {rev.comment}
+                          </p>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Right Side: Leave a Feedback Form (takes 1 col) */}
+              <div className="bg-[#FAF9F6] p-5 border border-editorial-charcoal/15 space-y-4 text-left">
+                <h4 className="text-[10px] font-mono uppercase tracking-wider font-bold text-editorial-charcoal">
+                  Add Star Rating &amp; Notes
+                </h4>
+                
+                {reviewSuccess && (
+                  <div className="bg-editorial-cream text-editorial-green text-xs p-3.5 border border-editorial-charcoal/25 font-mono font-bold flex items-center gap-2">
+                    <Check className="w-4 h-4 text-editorial-green" />
+                    <span>Rating submitted. Salutations!</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleRecipeReviewSubmit} className="space-y-4 text-left">
+                  <div>
+                    <label className="text-[9px] font-mono font-bold text-editorial-charcoal/40 uppercase block mb-1">Kitchen Moniker / Name</label>
+                    <input
+                      type="text"
+                      value={reviewName}
+                      onChange={(e) => setReviewName(e.target.value)}
+                      placeholder="e.g. Master Fermenter"
+                      required
+                      className="w-full border border-editorial-charcoal/20 text-xs p-2.5 rounded-none bg-white font-mono focus:border-editorial-charcoal focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-mono font-bold text-editorial-charcoal/40 uppercase block mb-1">Star Score</label>
+                    <div className="flex items-center gap-1 bg-white border border-editorial-charcoal/20 p-2">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewRating(star)}
+                          className="p-1 cursor-pointer transition-transform hover:scale-110"
+                          title={`${star} Star${star > 1 ? "s" : ""}`}
+                        >
+                          <Star
+                            className={`w-5 h-5 ${star <= reviewRating ? "text-amber-500 fill-current" : "text-stone-200"}`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-mono font-bold text-editorial-charcoal/40 uppercase block mb-1">Culinary Advice / Comment</label>
+                    <textarea
+                      rows={4}
+                      value={reviewComment}
+                      onChange={(e) => setReviewComment(e.target.value)}
+                      placeholder="Share your adjustment ratios, pH notes, or crisp results..."
+                      required
+                      className="w-full border border-editorial-charcoal/20 text-xs p-2.5 rounded-none bg-white font-sans focus:border-editorial-charcoal focus:outline-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2.5 bg-editorial-charcoal text-editorial-cream text-[10px] font-mono uppercase tracking-widest font-bold hover:bg-[#C1121F] hover:text-[#FAF9F6] transition-all rounded-none cursor-pointer"
+                  >
+                    Post Recipe Notes
+                  </button>
+                </form>
+              </div>
+
+            </div>
+          </div>
+
         </div>
+        
+        {/* Clean, Text-Only Printed Recipe Card Layout (visible ONLY in print mode) */}
+        <div className="hidden print:block text-black space-y-6 max-w-3xl mx-auto p-8 font-sans border-2 border-black bg-white" id="printable-recipe-card">
+          
+          {/* Cover header block */}
+          <div className="border-b-4 border-black pb-4 text-center space-y-2">
+            <span className="text-[10px] font-mono uppercase tracking-[0.25em] block text-stone-600 font-bold">Gourmet Fermenter Masterguide</span>
+            <h1 className="font-serif text-3xl font-black italic tracking-tight">{activeRecipe.title}</h1>
+            <p className="text-xs italic text-stone-600 max-w-xl mx-auto">{activeRecipe.description}</p>
+            
+            <div className="flex flex-wrap justify-center items-center gap-4 mt-4 pt-3 border-t border-stone-200 text-[10px] font-mono uppercase tracking-widest font-bold text-stone-700">
+              <span>By: {activeRecipe.author}</span>
+              <span>•</span>
+              <span>Prep: {activeRecipe.prepTime}</span>
+              <span>•</span>
+              <span>Cook: {activeRecipe.cookTime}</span>
+              <span>•</span>
+              <span>Heat: {activeRecipe.spiceLevel}</span>
+              <span>•</span>
+              <span>Skill: {activeRecipe.difficulty}</span>
+            </div>
+          </div>
+
+          {/* Ingredients Segment */}
+          <div className="space-y-3 pt-2">
+            <h2 className="font-serif text-base font-black border-b-2 border-black pb-1 uppercase tracking-tight">Required Ingredients Checklist</h2>
+            <ul className="grid grid-cols-2 gap-x-6 gap-y-2 text-xs">
+              {activeRecipe.ingredients.map((ing, i) => (
+                <li key={i} className="flex items-start gap-2 py-0.5">
+                  <span className="inline-block w-3.5 h-3.5 border border-black align-middle shrink-0 mt-0.5"></span>
+                  <span className="leading-snug">{ing}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Preparation Directions */}
+          <div className="space-y-4 pt-4">
+            <h2 className="font-serif text-base font-black border-b-2 border-black pb-1 uppercase tracking-tight">Methodology Instructions</h2>
+            <ol className="space-y-4 text-xs">
+              {activeRecipe.instructions.map((step, i) => (
+                <li key={i} className="space-y-1">
+                  <span className="font-mono font-extrabold text-[9px] uppercase tracking-wider block text-stone-500">Stage {String(i + 1).padStart(2, "0")}</span>
+                  <p className="leading-relaxed text-stone-900">{step}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          {/* Disclaimer & Footer context */}
+          <div className="border-t border-stone-300 pt-4 mt-8 flex justify-between items-center text-[8.5px] font-mono text-stone-400">
+            <span>Verified Pickle &amp; Pepper Hub Authentic Specimen</span>
+            <span>Compiled on {new Date().toLocaleDateString()}</span>
+          </div>
+          
+        </div>
+      </>
       ) : (
         /* 2. RECIPES LIST SEARCH BOARD */
         <div className="space-y-8 text-left animate-in fade-in duration-200">
@@ -286,6 +517,56 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
               Browse professional masterguides covering canning, dry-fermentation, brining, heat scaling, and wood-smoking techniques from independent growers.
             </p>
           </div>
+
+          {/* Trending Now Highlight Section */}
+          {trendingRecipes.length > 0 && (
+            <div className="space-y-4 bg-[#FAF9F6] border border-editorial-charcoal/15 p-5 animate-in fade-in duration-300" id="recipes-trending-section">
+              <div className="flex items-center gap-2 border-b border-editorial-charcoal/10 pb-2.5">
+                <Flame className="w-3.5 h-3.5 text-[#C1121F] animate-pulse shrink-0" />
+                <h3 className="font-serif text-xs font-bold uppercase tracking-widest text-[#C1121F]">
+                  Trending Now • Highly Acclaimed Ratios
+                </h3>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {trendingRecipes.map((rec) => (
+                  <div
+                    key={`trending-${rec.id}`}
+                    id={`trending-recipe-card-${rec.id}`}
+                    onClick={() => setActiveRecipeId(rec.id)}
+                    className="group relative bg-white border border-editorial-charcoal/10 hover:border-[#C1121F] hover:shadow-xs transition-all p-4 flex flex-col justify-between cursor-pointer text-left rounded-none overflow-hidden"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center text-[8px] font-mono font-bold tracking-widest uppercase text-editorial-charcoal/40">
+                        <span>GUIDE REFERENCE • BATCH-{rec.id}</span>
+                        <span className="flex items-center gap-0.5 text-amber-500 font-extrabold text-[10px]">
+                          ★ {rec.rating?.toFixed(1) || "5.0"}
+                        </span>
+                      </div>
+                      
+                      <h4 className="font-serif text-sm font-black text-editorial-charcoal group-hover:text-editorial-red transition-colors italic leading-snug line-clamp-1">
+                        {rec.title}
+                      </h4>
+                      
+                      <p className="text-stone-600 text-[11px] line-clamp-2 leading-relaxed font-sans">
+                        {rec.description}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2.5 mt-3 border-t border-editorial-charcoal/5 text-[9px] font-mono uppercase tracking-wider text-editorial-charcoal/50">
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-editorial-red shrink-0" />
+                        <span>{rec.prepTime}</span>
+                      </span>
+                      <span className="flex items-center gap-1 font-bold text-editorial-charcoal group-hover:text-[#C1121F] transition-all">
+                        Inspect Map →
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Quick Filters with clear, high-contrast inputs */}
           <div className="bg-[#FAF9F6] border border-editorial-charcoal/15 p-4 md:p-5 flex flex-col md:flex-row gap-4 items-center" id="recipe-search-filter-controls">
@@ -379,9 +660,16 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
 
                   <div className="p-5 flex flex-col justify-between flex-1 text-left space-y-4">
                     <div className="space-y-2">
-                      <span className="text-[8px] font-mono font-bold text-editorial-charcoal/40 tracking-widest uppercase block leading-none">
-                        GUIDE REFERENCE • BATCH-{rec.id}
-                      </span>
+                      <div className="flex justify-between items-center text-[8px] font-mono font-bold tracking-widest uppercase leading-none text-editorial-charcoal/40">
+                        <span>GUIDE REFERENCE • BATCH-{rec.id}</span>
+                        {rec.rating !== undefined && rec.rating > 0 ? (
+                          <span className="flex items-center gap-0.5 text-amber-500 font-extrabold text-[10px]">
+                            ★ {rec.rating.toFixed(1)} <span className="text-stone-400 font-normal">({rec.reviewsCount})</span>
+                          </span>
+                        ) : (
+                          <span className="text-[#968472] text-[9px] font-extrabold uppercase tracking-wide">★ NEW</span>
+                        )}
+                      </div>
                       <h3 className="font-serif text-base font-bold text-editorial-charcoal group-hover:text-editorial-red transition-colors line-clamp-1 italic">
                         {rec.title}
                       </h3>

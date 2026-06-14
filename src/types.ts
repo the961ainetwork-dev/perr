@@ -17,6 +17,7 @@ export interface Product {
   wholesaleCost?: number;
   supplierName?: string;
   originalProductId?: string;
+  isSeasonal?: boolean;
 }
 
 export interface Review {
@@ -27,6 +28,15 @@ export interface Review {
   date: string;
   comment: string;
   verified: boolean;
+}
+
+export interface RecipeReview {
+  id: string;
+  recipeId: string;
+  author: string;
+  rating: number;
+  date: string;
+  comment: string;
 }
 
 export interface Recipe {
@@ -44,6 +54,8 @@ export interface Recipe {
   relatedProductIds: string[]; // products available to purchase for this recipe
   approved: boolean;
   createdAt: string;
+  rating?: number;
+  reviewsCount?: number;
 }
 
 export interface CartItem {

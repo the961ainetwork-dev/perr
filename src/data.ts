@@ -1,4 +1,4 @@
-import { Product, Recipe, Order, Review, SellerProductSubmission, RecipeSubmission } from "./types";
+import { Product, Recipe, Order, Review, SellerProductSubmission, RecipeSubmission, RecipeReview } from "./types";
 
 export const INITIAL_PRODUCTS: Product[] = [
   {
@@ -31,7 +31,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     ingredients: ["Cucumbers", "Organic Cane Sugar", "Apple Cider Vinegar", "Sweet Yellow Onion", "Sea Salt", "Yellow Mustard Seeds", "Celery Seeds", "Turmeric", "Habanero Flakes"],
     sellerName: "Grateful Brines",
     tags: ["Sweet", "Crunchy", "Burger-Perfect"],
-    size: "12 oz Jar"
+    size: "12 oz Jar",
+    isSeasonal: true
   },
   {
     id: "prod-3",
@@ -79,7 +80,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     ingredients: ["Serrano Peppers", "Pure Cane Sugar", "Rice Vinegar", "Ginger Root", "Cinnamon Sticks", "Star Anise"],
     sellerName: "Sweet Sting Kitchens",
     tags: ["Sweet Heat", "Serrano", "Dessert Pairing"],
-    size: "8 oz Jar"
+    size: "8 oz Jar",
+    isSeasonal: true
   },
   {
     id: "prod-6",
@@ -127,7 +129,8 @@ export const INITIAL_PRODUCTS: Product[] = [
     ingredients: ["Rainbow Carrots", "Serrano Peppers", "Filtered Water", "Distilled Vinegar", "Key Lime Juice", "Sea Salt", "Mexican Oregano", "Coriander Stalk"],
     sellerName: "Sweet Sting Kitchens",
     tags: ["Mexican Style", "Carrots", "Crunchy", "Colorful"],
-    size: "16 oz Jar"
+    size: "16 oz Jar",
+    isSeasonal: true
   }
 ];
 
@@ -404,5 +407,40 @@ export const INITIAL_RECIPE_SUBMISSIONS: RecipeSubmission[] = [
     authorEmail: "danielle@pepperheads.org",
     status: "Pending",
     createdAt: "2026-06-13T08:15:00Z"
+  }
+];
+
+export const INITIAL_RECIPE_REVIEWS: RecipeReview[] = [
+  {
+    id: "rec-rev-1",
+    recipeId: "rec-1",
+    author: "BrineLover99",
+    rating: 5,
+    date: "2026-06-01",
+    comment: "These were mindblowing! Followed the tip about drying the pickle slices thoroughly and they came out perfectly crispy, not soggy at all."
+  },
+  {
+    id: "rec-rev-2",
+    recipeId: "rec-1",
+    author: "Sally_Spices",
+    rating: 4,
+    date: "2026-06-05",
+    comment: "Excellent batter, nice and airy. It went great with the garlic dills. Could use a tiny bit more pepper in the flour though."
+  },
+  {
+    id: "rec-rev-3",
+    recipeId: "rec-2",
+    author: "BurgerKingJames",
+    rating: 5,
+    date: "2026-06-03",
+    comment: "The spicy mayo layer with the Habanero Burger is next-level. This has officially become our weekly family tradition."
+  },
+  {
+    id: "rec-rev-4",
+    recipeId: "rec-3",
+    author: "FermentFanatic",
+    rating: 5,
+    date: "2026-06-10",
+    comment: "Very solid recipe for lacto fermentation. Mine has been bubbling nicely for 5 days. Tasting incredible already!"
   }
 ];

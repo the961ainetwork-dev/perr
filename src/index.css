@@ -19,3 +19,27 @@ body {
   color: var(--color-editorial-charcoal);
   font-family: var(--font-sans);
 }
+
+@media print {
+  /* Hide typical interactive page elements */
+  header, footer, nav, button, .no-print, #app-header, #app-footer, .cart-drawer {
+    display: none !important;
+  }
+  
+  /* Reset background and text colors to black & white printable standards */
+  body {
+    background-color: #ffffff !important;
+    background-image: none !important;
+    color: #000000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Reset container widths and remove absolute margins to avoid truncations */
+  main, .max-w-7xl, #recipe-book-zone {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+}
