@@ -1,15 +1,16 @@
 import React, { useState, useMemo } from "react";
 import { useApp } from "../context/AppContext";
 import { Recipe, Product } from "../types";
-import { Search, Flame, Clock, Award, CheckCircle2, ShoppingCart, ArrowLeft, ArrowRight, User, Plus, Check } from "lucide-react";
+import { Search, Flame, Clock, Award, CheckCircle2, ShoppingCart, ArrowLeft, ArrowRight, User, Plus, Check, X } from "lucide-react";
 
 interface RecipeBookProps {
   onSetTab: (tab: string) => void;
   selectedRecipeId?: string | null;
   onClearSelectedRecipe?: () => void;
+  onOpenCart?: () => void;
 }
 
-export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelectedRecipe }: RecipeBookProps) {
+export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelectedRecipe, onOpenCart }: RecipeBookProps) {
   const { recipes, products, addToCart } = useApp();
 
   // Selected recipe state
@@ -232,7 +233,10 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
 
                         {p.stock > 0 ? (
                           <button
-                            onClick={() => addToCart(p, 1)}
+                            onClick={() => {
+                              addToCart(p, 1);
+                              onOpenCart?.();
+                            }}
                             className="bg-editorial-charcoal text-editorial-cream text-[9px] font-mono tracking-wider px-2 py-1.5 uppercase font-bold hover:bg-editorial-red whitespace-nowrap transition-colors"
                           >
                             Add Specimen
@@ -283,18 +287,31 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
             </p>
           </div>
 
-          {/* Quick Filters */}
-          <div className="bg-editorial-gray border border-editorial-charcoal/15 p-4 flex flex-col md:flex-row gap-4 items-center">
+          {/* Quick Filters with clear, high-contrast inputs */}
+          <div className="bg-[#FAF9F6] border border-editorial-charcoal/15 p-4 md:p-5 flex flex-col md:flex-row gap-4 items-center" id="recipe-search-filter-controls">
             
-            {/* Search inputs */}
+            {/* Search inputs with absolute positioned icons */}
             <div className="relative flex-grow w-full md:w-auto">
+              <span className="sr-only">Search Recipe Map Database</span>
+              <Search className="absolute left-3.5 top-3.5 w-4 h-4 text-editorial-charcoal/40 pointer-events-none" />
               <input
+                id="recipe-text-search-bar"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search recipe guides, authors, ingredients..."
-                className="w-full pl-4 pr-10 py-2.5 bg-white border border-editorial-charcoal/20 text-xs focus:outline-none text-editorial-charcoal font-sans rounded-none"
+                placeholder="Filter recipes by title or ingredients (e.g., jalapeño, garlic, brining)..."
+                className="w-full pl-10 pr-10 py-3 bg-white border border-editorial-charcoal/20 text-xs focus:outline-none focus:border-editorial-charcoal text-editorial-charcoal font-sans rounded-none transition-all placeholder:text-stone-400"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3 top-2.5 p-1 text-editorial-charcoal/40 hover:text-editorial-charcoal transition-colors cursor-pointer"
+                  title="Clear search text query"
+                  aria-label="Clear recipe search"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
             {/* Skill Difficulty select */}

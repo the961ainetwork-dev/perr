@@ -1,6 +1,6 @@
 import React from "react";
 import { useApp } from "../context/AppContext";
-import { ShoppingCart, ChefHat, Store, Shield, User, Compass, HelpCircle, Search, X } from "lucide-react";
+import { ShoppingCart, ChefHat, Store, Shield, User, Compass, HelpCircle, Search, X, Coins } from "lucide-react";
 
 interface HeaderProps {
   activeTab: string;
@@ -16,6 +16,7 @@ export default function Header({ activeTab, setActiveTab, openCart }: HeaderProp
   const tabs = [
     { id: "market", label: "Marketplace", icon: Store, role: ["customer", "seller", "admin"] },
     { id: "recipes", label: "Artisan Recipes", icon: ChefHat, role: ["customer", "seller", "admin"] },
+    { id: "dropship", label: "Dropship Hub", icon: Coins, role: ["customer", "seller", "admin"] },
     { id: "seller", label: "Seller Kitchen", icon: User, role: ["customer", "seller"] },
     { id: "tracker", label: "Track Orders", icon: Compass, role: ["customer", "seller"] },
     { id: "admin", label: "Admin Kitchen", icon: Shield, role: ["admin"] },

@@ -9,7 +9,7 @@ interface CheckoutModalProps {
 }
 
 export default function CheckoutModal({ isOpen, onClose, onOrderCompleted }: CheckoutModalProps) {
-  const { cart, placeOrder } = useApp();
+  const { cart, placeOrder, addToast } = useApp();
 
   // Multi-step phase: 1 (Shipping), 2 (Payment), 3 (Success Receipt)
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -64,6 +64,14 @@ export default function CheckoutModal({ isOpen, onClose, onOrderCompleted }: Che
     setPlacedOrderDetails(newOrder);
     setInvoicePrinted(false);
     setStep(3);
+
+    // Trigger visual toast notification
+    addToast({
+      title: "Consignment Manifest Cleared!",
+      message: `Invoice ${newOrder.id} successfully compiled. ${newOrder.items.length} artisan jar(s) queued for shipment to ${newOrder.customerName} in ${newOrder.city}.`,
+      type: "success",
+      orderId: newOrder.id,
+    });
   };
 
   const handleFinishCheckout = () => {

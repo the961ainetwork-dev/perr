@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useApp } from "../context/AppContext";
-import { Clock, Truck, CheckCircle2, Globe, MapPin, Search, RefreshCw } from "lucide-react";
+import { Clock, Truck, CheckCircle2, Globe, MapPin, Search, RefreshCw, History, Calendar, Eye, ArrowUpRight } from "lucide-react";
 
 export default function OrderTracker() {
   const { orders } = useApp();
@@ -10,6 +10,31 @@ export default function OrderTracker() {
     if (orders.length > 0) return orders[0].id;
     return "";
   });
+
+  // History search and status states
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyStatus, setHistoryStatus] = useState<string>("all");
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((o) => {
+      const matchesSearch =
+        o.id.toLowerCase().includes(historySearch.toLowerCase()) ||
+        o.customerName.toLowerCase().includes(historySearch.toLowerCase()) ||
+        o.city.toLowerCase().includes(historySearch.toLowerCase()) ||
+        o.items.some((it) => it.productName.toLowerCase().includes(historySearch.toLowerCase()));
+
+      const matchesStatus = historyStatus === "all" || o.status === historyStatus;
+      return matchesSearch && matchesStatus;
+    });
+  }, [orders, historySearch, historyStatus]);
+
+  const handleTraceOrder = (id: string) => {
+    setSelectedOrderId(id);
+    const el = document.getElementById("order-tracker-zone");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   const activeOrder = useMemo(() => {
     return orders.find((o) => o.id === selectedOrderId);
@@ -62,7 +87,8 @@ export default function OrderTracker() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* Left Column: Order list selections */}
           <div className="space-y-4">
@@ -253,6 +279,253 @@ export default function OrderTracker() {
           </div>
 
         </div>
+
+        {/* Complete Order History Ledger Section */}
+        <div className="pt-8 border-t border-editorial-charcoal/15 text-left space-y-6" id="complete-order-history-ledger">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <History className="w-5 h-5 text-[#C1121F]" />
+                <h3 className="font-serif text-2xl font-bold italic text-editorial-charcoal">
+                  Consignment History Ledger
+                </h3>
+              </div>
+              <p className="text-[#1A1A1A]/60 text-xs font-sans">
+                Comprehensive audit trail of past and present cargo invoices, batch sizes, and courier handovers.
+              </p>
+            </div>
+
+            {/* Counter badge */}
+            <div className="bg-stone-100 border border-editorial-charcoal/10 px-3 py-1.5 font-mono text-[10px] uppercase font-bold text-editorial-charcoal">
+              Total Logs: {orders.length}
+            </div>
+          </div>
+
+          {/* Filter controls panel */}
+          <div className="bg-[#FAF9F6] border border-editorial-charcoal/15 p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Search tool */}
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-editorial-charcoal/40" />
+              <input
+                type="text"
+                placeholder="Filter key items, city destination, statement ID..."
+                value={historySearch}
+                onChange={(e) => setHistorySearch(e.target.value)}
+                className="w-full pl-9 pr-4 py-2 border border-editorial-charcoal/20 bg-white font-mono text-xs rounded-none focus:outline-none focus:border-editorial-charcoal"
+              />
+            </div>
+
+            {/* Status Tab buttons */}
+            <div className="flex flex-wrap gap-1.5">
+              {[
+                { key: "all", label: "All Statements" },
+                { key: "Pending", label: "Pending" },
+                { key: "Ready for Shipping", label: "Brining" },
+                { key: "Shipped", label: "Shipped" },
+                { key: "Completed", label: "Completed" },
+              ].map((tab) => (
+                <button
+                  key={tab.key}
+                  onClick={() => setHistoryStatus(tab.key)}
+                  className={`px-3 py-1.5 font-mono text-[9px] uppercase font-bold tracking-wider rounded-none border transition-all ${
+                    historyStatus === tab.key
+                      ? "bg-[#1A1A1A] text-white border-editorial-charcoal shadow-3xs"
+                      : "bg-white text-editorial-charcoal/80 border-editorial-charcoal/10 hover:border-editorial-charcoal/30 hover:bg-stone-50"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* List and Table view wrapper */}
+          {filteredOrders.length === 0 ? (
+            <div className="py-12 text-center text-editorial-charcoal/40 italic font-serif text-xs border border-dashed border-editorial-charcoal/15 bg-[#FAF9F6]">
+              No transaction records match your selection.
+            </div>
+          ) : (
+            <div className="bg-white border border-editorial-charcoal/15 shadow-2xs overflow-hidden">
+              {/* Desktop view (hidden on small viewports) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-left text-xs text-editorial-charcoal border-collapse">
+                  <thead>
+                    <tr className="bg-stone-50 border-b border-editorial-charcoal text-[8.5px] font-mono font-bold text-editorial-charcoal/50 uppercase tracking-widest">
+                      <th className="p-4">Invoice Ledger ID &amp; Date</th>
+                      <th className="p-4">Customer Destination</th>
+                      <th className="p-4">Purchased Specimen Batches</th>
+                      <th className="p-4">Value (USD)</th>
+                      <th className="p-4">Current Status</th>
+                      <th className="p-4 text-center">Location Link</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-editorial-charcoal/10">
+                    {filteredOrders.map((order) => {
+                      const isCurrentlyBeingTraced = order.id === selectedOrderId;
+                      const dateString = order.createdAt?.split("T")[0] || "2026-06-14";
+                      
+                      // Status badge colors
+                      let badgeStyle = "text-stone-700 bg-stone-100 border-stone-200";
+                      if (order.status === "Completed") {
+                        badgeStyle = "text-emerald-700 bg-emerald-50 border-emerald-200/50";
+                      } else if (order.status === "Shipped") {
+                        badgeStyle = "text-[#C1121F] bg-red-50/50 border-[#C1121F]/15";
+                      } else if (order.status === "Ready for Shipping") {
+                        badgeStyle = "text-amber-800 bg-amber-50 border-amber-200";
+                      }
+
+                      return (
+                        <tr 
+                          key={order.id} 
+                          className={`hover:bg-stone-50/50 transition-colors ${
+                            isCurrentlyBeingTraced ? "bg-stone-50" : ""
+                          }`}
+                        >
+                          <td className="p-4 font-mono">
+                            <span className="font-black text-editorial-charcoal block">{order.id}</span>
+                            <span className="text-[10px] text-[#1A1A1A]/50 block flex items-center gap-1 mt-0.5">
+                              <Calendar className="w-3 h-3 text-editorial-charcoal/40" />
+                              {dateString}
+                            </span>
+                          </td>
+                          <td className="p-4 font-sans text-xs">
+                            <span className="font-bold text-editorial-charcoal block">{order.customerName}</span>
+                            <span className="text-[10px] text-editorial-charcoal/70 block flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-editorial-charcoal/40 shrink-0" />
+                              {order.city}, {order.zipCode}
+                            </span>
+                          </td>
+                          <td className="p-4 font-sans text-xs">
+                            <div className="flex flex-col gap-1.5">
+                              {order.items.map((item, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                  <img 
+                                    src={item.image} 
+                                    alt={item.productName} 
+                                    className="w-6 h-6 object-cover border border-editorial-charcoal/10 shrink-0"
+                                    referrerPolicy="no-referrer"
+                                  />
+                                  <span className="font-serif italic font-medium text-editorial-charcoal line-clamp-1">
+                                    {item.productName} 
+                                    <span className="text-stone-400 font-sans font-bold not-italic ml-1 text-[9px]">x{item.quantity}</span>
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                          <td className="p-4 font-mono font-bold text-[#C1121F] text-sm font-black">
+                            ${order.total.toFixed(2)}
+                          </td>
+                          <td className="p-4">
+                            <span className={`inline-block px-2.5 py-1 rounded-none text-[8.5px] font-mono font-bold uppercase tracking-wider border ${badgeStyle}`}>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center">
+                            <button
+                              onClick={() => handleTraceOrder(order.id)}
+                              className={`px-3 py-1.5 text-[9px] font-mono uppercase font-bold tracking-wider rounded-none border cursor-pointer transition-all flex items-center gap-1 mx-auto ${
+                                isCurrentlyBeingTraced
+                                  ? "bg-editorial-charcoal text-white border-editorial-charcoal"
+                                  : "bg-white text-editorial-charcoal border-editorial-charcoal/20 hover:border-editorial-charcoal hover:bg-stone-50"
+                              }`}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>{isCurrentlyBeingTraced ? "Active Tracing" : "Trace Route"}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile view (visible on narrow screens, clean cards, touch-friendly elements) */}
+              <div className="block md:hidden divide-y divide-editorial-charcoal/10">
+                {filteredOrders.map((order) => {
+                  const isCurrentlyBeingTraced = order.id === selectedOrderId;
+                  const dateString = order.createdAt?.split("T")[0] || "2026-06-14";
+
+                  let badgeStyle = "text-stone-700 bg-stone-100 border-stone-200";
+                  if (order.status === "Completed") {
+                    badgeStyle = "text-emerald-700 bg-emerald-55 border-emerald-250";
+                  } else if (order.status === "Shipped") {
+                    badgeStyle = "text-[#C1121F] bg-red-50 border-red-200";
+                  } else if (order.status === "Ready for Shipping") {
+                    badgeStyle = "text-amber-800 bg-amber-50 border-amber-200";
+                  }
+
+                  return (
+                    <div 
+                      key={order.id} 
+                      className={`p-4 space-y-4 ${
+                        isCurrentlyBeingTraced ? "bg-stone-50" : "bg-white"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <span className="font-mono text-xs font-black text-editorial-charcoal block">{order.id}</span>
+                          <span className="text-[10px] text-stone-500 font-mono mt-0.5 block">{dateString}</span>
+                        </div>
+                        <span className={`inline-block px-2 py-0.5 rounded-none text-[8px] font-mono font-bold uppercase tracking-wider border ${badgeStyle}`}>
+                          {order.status}
+                        </span>
+                      </div>
+
+                      {/* Customer details */}
+                      <div className="text-xs bg-stone-50 border border-stone-150 p-2.5 space-y-1">
+                        <span className="text-editorial-charcoal font-bold block">Deliver to: {order.customerName}</span>
+                        <span className="text-[10px] text-editorial-charcoal/70 block flex items-center gap-1 truncate font-mono">
+                          <MapPin className="w-3 h-3 text-editorial-charcoal/40" />
+                          {order.city}, {order.zipCode}
+                        </span>
+                      </div>
+
+                      {/* Ordered Items */}
+                      <div className="space-y-2">
+                        {order.items.map((item, idx) => (
+                          <div key={idx} className="flex items-center gap-2.5">
+                            <img 
+                              src={item.image} 
+                              alt={item.productName} 
+                              className="w-8 h-8 object-cover border border-editorial-charcoal/10 shrink-0"
+                              referrerPolicy="no-referrer"
+                            />
+                            <span className="font-serif italic text-xs text-editorial-charcoal flex-1 min-w-0 truncate text-left">
+                              {item.productName} 
+                              <span className="text-stone-450 font-sans font-bold not-italic ml-1 text-[9px] bg-white border border-stone-200 px-1 py-0.5">x{item.quantity}</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Order value and CTA */}
+                      <div className="flex justify-between items-center pt-2 border-t border-editorial-charcoal/5">
+                        <div>
+                          <span className="text-[8px] font-mono text-stone-400 uppercase tracking-wider block">Grand Total</span>
+                          <span className="font-mono text-xs font-bold text-[#C1121F]">${order.total.toFixed(2)}</span>
+                        </div>
+                        <button
+                          onClick={() => handleTraceOrder(order.id)}
+                          className={`px-3 py-2 text-[9px] font-mono uppercase font-bold tracking-wider rounded-none border cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5 transition-all ${
+                            isCurrentlyBeingTraced
+                              ? "bg-editorial-charcoal text-white border-editorial-charcoal"
+                              : "bg-white text-editorial-charcoal border-editorial-charcoal/20 hover:border-editorial-charcoal"
+                          }`}
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          <span>{isCurrentlyBeingTraced ? "Tracing" : "Trace ID"}</span>
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+        </>
       )}
 
     </div>

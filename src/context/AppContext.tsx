@@ -9,6 +9,15 @@ import {
   INITIAL_RECIPE_SUBMISSIONS,
 } from "../data";
 
+export interface ToastMessage {
+  id: string;
+  title: string;
+  message: string;
+  type: "success" | "info" | "warning";
+  orderId?: string;
+  duration?: number;
+}
+
 interface AppContextType {
   products: Product[];
   recipes: Recipe[];
@@ -19,6 +28,9 @@ interface AppContextType {
   recipeSubmissions: RecipeSubmission[];
   userRole: "customer" | "seller" | "admin";
   setUserRole: (role: "customer" | "seller" | "admin") => void;
+  toasts: ToastMessage[];
+  addToast: (toast: Omit<ToastMessage, "id">) => void;
+  removeToast: (id: string) => void;
   addToCart: (product: Product, quantity?: number) => void;
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, qty: number) => void;
@@ -45,6 +57,7 @@ interface AppContextType {
   toggleWishlist: (productId: string) => void;
   headerSearchQuery: string;
   setHeaderSearchQuery: (query: string) => void;
+  importDropshipProduct: (product: Product) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -96,6 +109,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   });
 
   const [headerSearchQuery, setHeaderSearchQuery] = useState("");
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  const addToast = (toast: Omit<ToastMessage, "id">) => {
+    const id = `toast-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const newToast: ToastMessage = { ...toast, id };
+    setToasts((prev) => [...prev, newToast]);
+
+    const duration = toast.duration || 6000;
+    setTimeout(() => {
+      removeToast(id);
+    }, duration);
+  };
+
+  const removeToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
 
   // Persist states to localStorage when they change
   useEffect(() => {
@@ -365,6 +394,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, stock: newStock } : p)));
   };
 
+  const importDropshipProduct = (newProduct: Product) => {
+    setProducts((prev) => [newProduct, ...prev]);
+  };
+
   const toggleWishlist = (productId: string) => {
     setWishlist((prev) =>
       prev.includes(productId)
@@ -385,6 +418,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         recipeSubmissions,
         userRole,
         setUserRole,
+        toasts,
+        addToast,
+        removeToast,
         addToCart,
         removeFromCart,
         updateCartQuantity,
@@ -404,6 +440,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         toggleWishlist,
         headerSearchQuery,
         setHeaderSearchQuery,
+        importDropshipProduct,
       }}
     >
       {children}

@@ -1,16 +1,19 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { AppProvider, useApp } from "./context/AppContext";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import PicklePepperMarketplace from "./components/PicklePepperMarketplace";
 import RecipeBook from "./components/RecipeBook";
 import SellerPortal from "./components/SellerPortal";
+import MerchantHub from "./components/MerchantHub";
 import OrderTracker from "./components/OrderTracker";
 import AdminZone from "./components/AdminZone";
 import CartDrawer from "./components/CartDrawer";
 import CheckoutModal from "./components/CheckoutModal";
 import FAQModal from "./components/FAQModal";
-import { Compass, Flame, Leaf, Truck, Instagram, Twitter, Pin } from "lucide-react";
+import ToastContainer from "./components/ToastNotification";
+import { ArrowUp, Compass, Flame, Leaf, Truck, Instagram, Twitter, Pin } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 function MainAppContent() {
   const { userRole } = useApp();
@@ -28,6 +31,35 @@ function MainAppContent() {
 
   // Hero category shortcut filter state passed down to marketplace
   const [heroCategoryFilter, setHeroCategoryFilter] = useState<"pickle" | "pepper" | "all">("all");
+
+  // Floating 'Back to Top' button scroll visibility
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const heroEl = document.getElementById("hero-banner");
+      if (heroEl) {
+        // Bounding rect bottom <= 0 means scroll past bottom of the Hero section
+        const rect = heroEl.getBoundingClientRect();
+        setShowScrollTop(rect.bottom <= 0);
+      } else {
+        // Fallback for tabs where the hero component is not currently rendered
+        setShowScrollTop(window.scrollY > 450);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    // Initial verification
+    handleScroll();
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, [activeTab]);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   const handleHeroCategorySearch = (category: "pickle" | "pepper" | "all") => {
     setHeroCategoryFilter(category);
@@ -83,6 +115,7 @@ function MainAppContent() {
                 onSelectRecipe={handleSelectRecipeFromProduct}
                 onSetTab={setActiveTab}
                 categoryFilter={heroCategoryFilter}
+                onOpenCart={() => setIsCartOpen(true)}
               />
             </div>
           )}
@@ -99,7 +132,15 @@ function MainAppContent() {
                 }}
                 selectedRecipeId={selectedRecipeId}
                 onClearSelectedRecipe={handleClearSelectedRecipe}
+                onOpenCart={() => setIsCartOpen(true)}
               />
+            </div>
+          )}
+
+          {/* 3. ARTISAN DROPSHIP COMMAND CENTRAL PORTAL */}
+          {activeTab === "dropship" && (
+            <div className="py-8 animate-in fade-in duration-200">
+              <MerchantHub />
             </div>
           )}
 
@@ -150,6 +191,19 @@ function MainAppContent() {
       <FAQModal 
         isOpen={isFAQOpen}
         onClose={() => setIsFAQOpen(false)}
+      />
+
+      {/* Dynamic Floating Toast Alerts System */}
+      <ToastContainer 
+        onViewOrder={(orderId) => {
+          setActiveTab("tracker");
+          setTimeout(() => {
+            const trackerZone = document.getElementById("order-tracker-zone");
+            if (trackerZone) {
+              trackerZone.scrollIntoView({ behavior: "smooth" });
+            }
+          }, 150);
+        }}
       />
 
       {/* Gourmet Pickling Manifesto Footer */}
@@ -245,6 +299,26 @@ function MainAppContent() {
 
         </div>
       </footer>
+
+      {/* Floating Back to Top Button */}
+      <AnimatePresence>
+        {showScrollTop && (
+          <motion.button
+            id="back-to-top-button"
+            initial={{ opacity: 0, scale: 0.8, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 15 }}
+            whileHover={{ scale: 1.08 }}
+            whileTap={{ scale: 0.94 }}
+            onClick={scrollToTop}
+            title="Scroll to Top"
+            aria-label="Back to top"
+            className="fixed bottom-6 right-6 z-40 p-3 bg-[#1A1A1A] hover:bg-[#C1121F] text-[#FAF9F6] hover:text-white transition-colors duration-200 border border-white/10 bg-opacity-95 backdrop-blur-xs rounded-none shadow-md cursor-pointer flex items-center justify-center"
+          >
+            <ArrowUp className="w-5 h-5 text-current stroke-[2.5px]" />
+          </motion.button>
+        )}
+      </AnimatePresence>
 
     </div>
   );

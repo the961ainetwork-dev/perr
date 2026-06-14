@@ -8,9 +8,10 @@ interface MarketplaceProps {
   onSetTab: (tab: string) => void;
   searchTerm?: string;
   categoryFilter?: "pickle" | "pepper" | "all";
+  onOpenCart?: () => void;
 }
 
-export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, categoryFilter = "all" }: MarketplaceProps) {
+export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, categoryFilter = "all", onOpenCart }: MarketplaceProps) {
   const { products, recipes, reviews, addReview, addToCart, wishlist, toggleWishlist, headerSearchQuery, setHeaderSearchQuery } = useApp();
 
   // Filters State (Synchronized with Header)
@@ -20,6 +21,23 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
   const [selectedSpice, setSelectedSpice] = useState<string>("all");
   const [selectedSort, setSelectedSort] = useState<string>("default");
   const [showOnlyWishlist, setShowOnlyWishlist] = useState(false);
+
+  // Price range preset and custom slider range states
+  const [pricePreset, setPricePreset] = useState<string>("all");
+  const [customMaxPrice, setCustomMaxPrice] = useState<number>(30);
+
+  const maxPriceOfAllProducts = useMemo(() => {
+    if (!products || products.length === 0) return 30;
+    const max = Math.max(...products.map((p) => p.price));
+    return Math.ceil(max);
+  }, [products]);
+
+  // Sync customMaxPrice with calculated max product price initially
+  React.useEffect(() => {
+    if (maxPriceOfAllProducts > 0) {
+      setCustomMaxPrice(maxPriceOfAllProducts);
+    }
+  }, [maxPriceOfAllProducts]);
 
   // Product Selection Modal State
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
@@ -98,7 +116,16 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
 
         const matchesWishlist = !showOnlyWishlist || wishlist.includes(p.id);
 
-        return matchesSearch && matchesCategory && matchesSpice && matchesWishlist;
+        const matchesPrice = () => {
+          if (pricePreset === "all") return true;
+          if (pricePreset === "under-10") return p.price < 10;
+          if (pricePreset === "10-15") return p.price >= 10 && p.price <= 15;
+          if (pricePreset === "above-15") return p.price > 15;
+          if (pricePreset === "custom") return p.price <= customMaxPrice;
+          return true;
+        };
+
+        return matchesSearch && matchesCategory && matchesSpice && matchesWishlist && matchesPrice();
       })
       .sort((a, b) => {
         if (selectedSort === "price-asc") return a.price - b.price;
@@ -106,7 +133,7 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
         if (selectedSort === "rating") return b.rating - a.rating;
         return 0; // default order
       });
-  }, [products, search, selectedCategory, selectedSpice, selectedSort, showOnlyWishlist, wishlist]);
+  }, [products, search, selectedCategory, selectedSpice, selectedSort, showOnlyWishlist, wishlist, pricePreset, customMaxPrice]);
 
   // Product reviews
   const currentProductReviews = useMemo(() => {
@@ -250,6 +277,70 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
           </div>
 
         </div>
+
+        {/* Price Range Filter Row */}
+        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between pt-6 border-t border-editorial-charcoal/10" id="price-range-filter-container">
+          {/* Label + Dropdown Select */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 w-full lg:w-auto">
+            <div className="space-y-0.5">
+              <span className="text-[10px] font-mono font-bold text-editorial-charcoal/40 tracking-wider uppercase block">Price Range:</span>
+              <p className="text-[11px] text-editorial-charcoal/60 font-sans hidden sm:block">Filter gourmet jars by valuation threshold</p>
+            </div>
+            
+            <select
+              id="price-preset-dropdown"
+              value={pricePreset}
+              onChange={(e) => {
+                const val = e.target.value;
+                setPricePreset(val);
+                if (val === "under-10") {
+                  setCustomMaxPrice(10);
+                } else if (val === "10-15") {
+                  setCustomMaxPrice(15);
+                } else if (val === "all") {
+                  setCustomMaxPrice(maxPriceOfAllProducts || 30);
+                }
+              }}
+              className="px-4 py-2.5 border border-editorial-charcoal/20 text-xs font-mono uppercase tracking-widest bg-white text-editorial-charcoal focus:outline-none focus:border-editorial-charcoal rounded-none w-full sm:w-64 cursor-pointer"
+            >
+              <option value="all">Uncapped (Show All Prices)</option>
+              <option value="under-10">Under $10.00</option>
+              <option value="10-15">$10.00 to $15.00</option>
+              <option value="above-15">Premium Tier (Over $15.00)</option>
+              <option value="custom">Tactile Slider Range (Custom)</option>
+            </select>
+          </div>
+
+          {/* Slider Controls with active highlight feedback */}
+          <div className="w-full lg:flex-1 max-w-xl flex flex-col sm:flex-row sm:items-center gap-4 bg-[#FAF9F6] border border-editorial-charcoal/10 p-3.5">
+            <div className="flex items-center justify-between sm:justify-start gap-3 shrink-0">
+              <span className="text-[10px] font-mono font-bold text-editorial-charcoal/40 tracking-wider uppercase">Max Price Cap:</span>
+              <span className="bg-[#1A1A1A] text-white font-mono text-xs font-black px-3 py-1.5 rounded-none min-w-[70px] text-center">
+                ${customMaxPrice.toFixed(2)}
+              </span>
+            </div>
+            
+            <div className="flex-grow flex items-center gap-3">
+              <span className="text-[10px] font-mono text-stone-400 font-bold">$1.00</span>
+              <input
+                type="range"
+                id="price-range-slider"
+                min="1"
+                max={Math.max(30, maxPriceOfAllProducts)}
+                step="0.5"
+                value={customMaxPrice}
+                onChange={(e) => {
+                  setCustomMaxPrice(parseFloat(e.target.value));
+                  setPricePreset("custom"); // Automatically switch to dynamic custom mode
+                }}
+                className="flex-grow accent-[#C1121F] bg-stone-200 h-1 cursor-pointer appearance-none rounded-none outline-none"
+                aria-label="Filter maximum product price"
+              />
+              <span className="text-[10px] font-mono text-stone-400 font-bold">${Math.max(30, maxPriceOfAllProducts).toFixed(2)}</span>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       {/* Grid count summary line */}
@@ -259,13 +350,15 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
         </span>
         
         {/* Reset filters helper link */}
-        {(search || selectedCategory !== "all" || selectedSpice !== "all" || showOnlyWishlist) && (
+        {(search || selectedCategory !== "all" || selectedSpice !== "all" || showOnlyWishlist || pricePreset !== "all") && (
           <button
             onClick={() => {
               setSearch("");
               setSelectedCategory("all");
               setSelectedSpice("all");
               setShowOnlyWishlist(false);
+              setPricePreset("all");
+              setCustomMaxPrice(maxPriceOfAllProducts || 30);
             }}
             className="text-xs uppercase font-mono tracking-widest text-[#C1121F] hover:underline font-bold"
           >
@@ -288,6 +381,8 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
               setSelectedCategory("all");
               setSelectedSpice("all");
               setShowOnlyWishlist(false);
+              setPricePreset("all");
+              setCustomMaxPrice(maxPriceOfAllProducts || 30);
             }}
             className="mt-6 px-5 py-3 bg-editorial-charcoal text-editorial-cream rounded-none text-xs font-mono uppercase tracking-widest font-bold hover:bg-editorial-charcoal/90 transition-all"
           >
@@ -336,9 +431,15 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
                   </button>
                   
                   {/* Category icon */}
-                  <span className="absolute bottom-3 right-3 w-8 h-8 bg-white text-editorial-charcoal border border-editorial-charcoal/15 rounded-none flex items-center justify-center text-xs shadow-2xs">
+                  <span className="absolute bottom-3 right-3 w-8 h-8 bg-white text-editorial-charcoal border border-editorial-charcoal/15 rounded-none flex items-center justify-center text-xs shadow-2xs text-center z-10">
                     {p.category === "pickle" ? "🥒" : p.category === "pepper" ? "🌶️" : p.category === "oil" ? "🫙" : "🧪"}
                   </span>
+
+                  {p.isDropshipped && (
+                    <span className="absolute bottom-3 left-3 bg-stone-950 text-amber-400 border border-stone-850 text-[8.5px] font-mono uppercase tracking-widest font-black px-2.5 py-1 rounded-none shadow-2xs z-10">
+                      🌍 Direct Sourced
+                    </span>
+                  )}
 
                   {/* Stock Alert Badge */}
                   {hasLowStock && p.stock > 0 && (
@@ -359,7 +460,7 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
                 <div className="p-5 flex flex-col flex-1 text-left justify-between space-y-4">
                   <div className="space-y-2">
                     <span className="text-[9px] font-mono text-editorial-charcoal/40 block tracking-widest uppercase font-bold">
-                      Provenanced From {p.sellerName}
+                      {p.isDropshipped ? `🌍 Direct Origin: ${p.supplierName}` : `Provenanced From ${p.sellerName}`}
                     </span>
                     <h3 
                       onClick={() => { setSelectedProduct(p); setModalTab("details"); }}
@@ -399,7 +500,10 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
                     {p.stock > 0 ? (
                       <button
                         id={`add-to-cart-btn-${p.id}`}
-                        onClick={() => addToCart(p, 1)}
+                        onClick={() => {
+                          addToCart(p, 1);
+                          onOpenCart?.();
+                        }}
                         className="bg-editorial-charcoal text-editorial-cream border border-editorial-charcoal p-2.5 rounded-none font-mono uppercase tracking-widest text-[10px] hover:bg-editorial-red hover:border-editorial-red transition-all shadow-2xs"
                         title="Add delicious jar to shopping cart"
                       >
@@ -470,7 +574,13 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
                   <div>
                     <span className="text-[9px] font-mono uppercase tracking-widest text-editorial-red font-bold">{selectedProduct.category} Collection</span>
                     <h2 className="font-serif text-2xl font-black text-editorial-charcoal mt-1 italic">{selectedProduct.name}</h2>
-                    <span className="text-xs text-editorial-charcoal/50 block mt-1">Fermentation craft by certified master: <span className="text-editorial-charcoal font-bold">{selectedProduct.sellerName}</span></span>
+                    <span className="text-xs text-editorial-charcoal/50 block mt-1">
+                      {selectedProduct.isDropshipped ? (
+                        <>Import &amp; curation direct from farm crop: <span className="text-[#C1121F] font-black">{selectedProduct.supplierName}</span></>
+                      ) : (
+                        <>Fermentation craft by certified master: <span className="text-editorial-charcoal font-bold">{selectedProduct.sellerName}</span></>
+                      )}
+                    </span>
                   </div>
 
                   <div className="flex items-center gap-4">
@@ -709,6 +819,7 @@ export default function PicklePepperMarketplace({ onSelectRecipe, onSetTab, cate
                     onClick={() => {
                       addToCart(selectedProduct, 1);
                       setSelectedProduct(null);
+                      onOpenCart?.();
                     }}
                     className="px-5 py-2.5 bg-editorial-charcoal text-editorial-cream rounded-none text-xs font-mono uppercase tracking-widest font-bold flex items-center gap-2 hover:bg-editorial-red transition-all shadow-md border border-editorial-charcoal hover:border-editorial-[#C1121F]"
                   >
