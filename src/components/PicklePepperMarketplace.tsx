@@ -65,6 +65,25 @@ export default function PicklePepperMarketplace({
   const [compareIds, setCompareIds] = useState<string[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
 
+  // Simulated premium data fetching loading state
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500); // short premium feel transition delay
+    return () => clearTimeout(timer);
+  }, [
+    selectedCategory,
+    selectedSpice,
+    selectedSort,
+    showOnlyWishlist,
+    pricePreset,
+    customMaxPrice,
+    search
+  ]);
+
   const toggleCompareSet = (productId: string) => {
     setCompareIds((prev) => {
       if (prev.includes(productId)) {
@@ -419,7 +438,52 @@ export default function PicklePepperMarketplace({
       </div>
 
       {/* Products Grid */}
-      {filteredProducts.length === 0 ? (
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse" id="product-grid-skeleton">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-white rounded-none border border-editorial-charcoal/12 overflow-hidden flex flex-col h-full">
+              {/* Product Thumbnail container skeleton */}
+              <div className="relative h-56 bg-stone-100 flex items-center justify-center border-b border-editorial-charcoal/10">
+                <div className="w-10 h-10 bg-stone-200/40" />
+                <div className="absolute top-3 left-3 w-16 h-5 bg-stone-200/60" />
+                <div className="absolute top-3 right-3 w-8 h-8 bg-stone-200/60" />
+                <div className="absolute bottom-3 right-3 w-8 h-8 bg-stone-200/60" />
+              </div>
+              {/* Info block skeleton */}
+              <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
+                <div className="space-y-3 text-left">
+                  <div className="h-3 bg-stone-200/60 w-3/4" />
+                  <div className="h-5 bg-stone-200/85 w-11/12" />
+                  <div className="space-y-1.5 pt-1">
+                    <div className="h-3 bg-stone-100/95 w-full" />
+                    <div className="h-3 bg-stone-100/95 w-5/6" />
+                  </div>
+                </div>
+                {/* Rating summary skeleton */}
+                <div className="flex items-center justify-between gap-1.5 pt-1">
+                  <div className="flex gap-1">
+                    {[...Array(5)].map((_, idx) => (
+                      <div key={idx} className="w-3 h-3 bg-stone-200/50" />
+                    ))}
+                  </div>
+                  <div className="flex gap-1.5">
+                    <div className="w-14 h-5 bg-stone-200/50" />
+                    <div className="w-12 h-5 bg-stone-200/50" />
+                  </div>
+                </div>
+                {/* Line partition & price tag skeleton */}
+                <div className="border-t border-editorial-charcoal/10 pt-4 flex items-center justify-between">
+                  <div className="space-y-1">
+                    <div className="h-2.5 bg-stone-100 w-10" />
+                    <div className="h-5 bg-stone-200/70 w-16" />
+                  </div>
+                  <div className="h-9 bg-stone-200 w-24" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filteredProducts.length === 0 ? (
         <div className="bg-[#FAF9F6] border border-dashed border-editorial-charcoal/20 rounded-none py-16 text-center max-w-lg mx-auto">
           <AlertCircle className="w-10 h-10 text-editorial-charcoal/30 mx-auto mb-3" />
           <h3 className="font-serif text-lg font-bold text-editorial-charcoal italic">No batch matches your filter</h3>

@@ -27,6 +27,17 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedHeat, setSelectedHeat] = useState<string>("all");
 
+  // Simulated premium data fetching loading state
+  const [isLoading, setIsLoading] = useState(true);
+
+  React.useEffect(() => {
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 500); // short premium feel transition delay
+    return () => clearTimeout(timer);
+  }, [searchQuery, selectedDifficulty, selectedHeat]);
+
   // Sync with prop if navigated from a product link
   React.useEffect(() => {
     if (selectedRecipeId) {
@@ -629,7 +640,39 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
           </div>
 
           {/* Recipe Grid listing */}
-          {filteredRecipes.length === 0 ? (
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 animate-pulse" id="recipe-grid-skeleton">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-white border border-editorial-charcoal/15 overflow-hidden flex flex-col rounded-none">
+                  {/* Live card thumbnail mockup */}
+                  <div className="relative h-48 bg-stone-100 flex items-center justify-center">
+                    <div className="w-10 h-10 bg-stone-200/40" />
+                    <span className="absolute bottom-3 left-3 bg-stone-200/60 w-20 h-5" />
+                    <span className="absolute top-3 right-3 bg-stone-200/60 w-14 h-5" />
+                  </div>
+                  {/* Detailed metadata segment mockup */}
+                  <div className="p-5 flex flex-col justify-between flex-1 text-left space-y-4">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div className="h-3 bg-stone-200/60 w-24" />
+                        <div className="h-3 bg-stone-200/60 w-10" />
+                      </div>
+                      <div className="h-5 bg-stone-200/85 w-3/4" />
+                      <div className="space-y-1.5 pt-1">
+                        <div className="h-3 bg-stone-100/95 w-full" />
+                        <div className="h-3 bg-stone-100/95 w-5/6" />
+                      </div>
+                    </div>
+                    {/* Footnote alignment mockup */}
+                    <div className="flex items-center justify-between pt-3.5 border-t border-editorial-charcoal/10">
+                      <div className="h-3 bg-stone-200/60 w-20" />
+                      <div className="h-3 bg-stone-200/60 w-24" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredRecipes.length === 0 ? (
             <div className="py-16 bg-[#FAF9F6] border border-dashed border-editorial-charcoal/15 text-center">
               <Clock className="w-8 h-8 text-editorial-charcoal/20 mx-auto mb-2" />
               <p className="text-xs text-editorial-charcoal/40 font-mono uppercase tracking-wider">No recipe maps match your criteria.</p>
