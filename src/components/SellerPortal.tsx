@@ -33,7 +33,7 @@ export default function SellerPortal() {
   // Recipe submission form state
   const [recTitle, setRecTitle] = useState("");
   const [recDescription, setRecDescription] = useState("");
-  const [recDifficulty, setRecDifficulty] = useState<"Easy" | "Medium" | "Hard">("Medium");
+  const [recDifficulty, setRecDifficulty] = useState<"Easy" | "Advanced" | "Time-Intensive">("Advanced");
   const [recPrep, setRecPrep] = useState("15 mins");
   const [recCook, setRecCook] = useState("10 mins");
   const [recIngredientsText, setRecIngredientsText] = useState("Pickles, bread, mustard, cheese");
@@ -509,9 +509,9 @@ export default function SellerPortal() {
                       onChange={(e) => setRecDifficulty(e.target.value as any)}
                       className="w-full border border-editorial-charcoal/20 p-2.5 text-xs focus:outline-none bg-white font-mono rounded-none"
                     >
-                      <option value="Easy">Easy / Simple (Under 30 mins)</option>
-                      <option value="Medium">Medium / Interm. (Staged Ferments)</option>
-                      <option value="Hard">Expert / Master Class (Aseptic work)</option>
+                      <option value="Easy">Easy (Simple &amp; Quick)</option>
+                      <option value="Advanced">Advanced (Staged Ferments)</option>
+                      <option value="Time-Intensive">Time-Intensive (Precision brining)</option>
                     </select>
                   </div>
                 </div>

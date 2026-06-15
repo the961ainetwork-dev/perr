@@ -44,7 +44,7 @@ export interface Recipe {
   title: string;
   description: string;
   image: string;
-  difficulty: "Easy" | "Medium" | "Hard";
+  difficulty: "Easy" | "Advanced" | "Time-Intensive";
   prepTime: string;
   cookTime: string;
   ingredients: string[];
@@ -106,7 +106,7 @@ export interface RecipeSubmission {
   id: string;
   title: string;
   description: string;
-  difficulty: "Easy" | "Medium" | "Hard";
+  difficulty: "Easy" | "Advanced" | "Time-Intensive";
   prepTime: string;
   cookTime: string;
   ingredients: string[];

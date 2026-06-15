@@ -172,7 +172,7 @@ export const INITIAL_RECIPES: Recipe[] = [
     title: "Double-Crust Spicy Habanero Burger Stacker",
     description: "An explosive gourmet burger experience. Searing beef patties topped with dripping cheddar, heavy garlic mayo, and heaps of sweet and spicy crisp bread & butters paired with caramelized shallots.",
     image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&q=80&w=800",
-    difficulty: "Medium",
+    difficulty: "Advanced",
     prepTime: "20 mins",
     cookTime: "15 mins",
     ingredients: [
@@ -203,7 +203,7 @@ export const INITIAL_RECIPES: Recipe[] = [
     title: "The Ultimate Fermented Probiotic Chili Paste",
     description: "Harness the power of wild fermentation! Learn how to transform standard grocery chilis into an incredibly complex, probiotic-packed hot paste using our custom starter cultures.",
     image: "https://images.unsplash.com/photo-1604152135912-04a022e23696?auto=format&fit=crop&q=80&w=800",
-    difficulty: "Hard",
+    difficulty: "Time-Intensive",
     prepTime: "25 mins",
     cookTime: "48 hours (Fermentation)",
     ingredients: [
@@ -397,7 +397,7 @@ export const INITIAL_RECIPE_SUBMISSIONS: RecipeSubmission[] = [
     id: "rsub-1",
     title: "Crispy Beer Batter Jalapeno Poppers",
     description: "Crisp and velvety cream-cheese stuffed fresh jalapenos dipped in cold double-hopped IPA batter. Crisp fry for 3 minutes for the ultimate football sunday plate.",
-    difficulty: "Medium",
+    difficulty: "Advanced",
     prepTime: "20 mins",
     cookTime: "10 mins",
     ingredients: ["12 Fresh medium Jalapeno peppers", "8 oz cream cheese, softened", "1 cup shredded Cheddar cheese", "1 cup sifted flour", "1 cup cold India Pale Ale beer", "Seasonings: cayenne, coarse salt"],

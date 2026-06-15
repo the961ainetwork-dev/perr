@@ -112,13 +112,13 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
   const getDifficultyColor = (diff: Recipe["difficulty"]) => {
     switch (diff) {
       case "Easy":
-        return "bg-green-50 text-green-700 border-green-200";
-      case "Medium":
-        return "bg-amber-50 text-amber-700 border-amber-200";
-      case "Hard":
-        return "bg-red-50 text-red-700 border-red-200";
+        return "bg-emerald-50 text-emerald-800 border-emerald-200/80";
+      case "Advanced":
+        return "bg-amber-50 text-amber-800 border-amber-200/80";
+      case "Time-Intensive":
+        return "bg-purple-50 text-purple-800 border-purple-200/80";
       default:
-        return "bg-stone-55 text-stone-605";
+        return "bg-stone-50 text-stone-700 border-stone-200";
     }
   };
 
@@ -168,7 +168,7 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
             {/* Title / Meta block overlay */}
             <div className="relative z-20 p-6 md:p-10 space-y-4 max-w-4xl text-left">
               <div className="flex flex-wrap gap-2.5">
-                <span className="bg-[#FAF9F6] text-editorial-charcoal font-mono border border-editorial-charcoal/20 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
+                <span className={`border px-2.5 py-0.5 text-[9px] font-bold font-mono uppercase tracking-wider ${getDifficultyColor(activeRecipe.difficulty)} bg-white/95 backdrop-blur-xs shadow-xs`}>
                   {activeRecipe.difficulty} Skill
                 </span>
                 <span className="bg-[#C1121F] text-editorial-cream border border-transparent px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider">
@@ -615,9 +615,9 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
                 className="bg-white border border-editorial-charcoal/20 py-2 px-3 text-xs font-bold font-mono uppercase rounded-none"
               >
                 <option value="all">All Difficulty Levels</option>
-                <option value="Easy">Simple / Easy</option>
-                <option value="Medium">Medium / Interm.</option>
-                <option value="Hard">Expert / Chef</option>
+                <option value="Easy">Easy</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Time-Intensive">Time-Intensive</option>
               </select>
             </div>
 
@@ -696,7 +696,7 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
                     <span className="absolute bottom-3 left-3 bg-[#FAF9F6] border border-editorial-charcoal/15 text-editorial-charcoal text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5">
                       ⏱ {rec.prepTime} Prep
                     </span>
-                    <span className="absolute top-3 right-3 bg-[#C1121F] text-editorial-cream text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5">
+                    <span className={`absolute top-3 right-3 border px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider ${getDifficultyColor(rec.difficulty)} bg-white/95 backdrop-blur-xs shadow-xs`}>
                       {rec.difficulty}
                     </span>
                   </div>
@@ -721,11 +721,25 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
                       </p>
                     </div>
 
-                    <div className="flex items-center justify-between pt-3.5 border-t border-editorial-charcoal/10 text-[9px] font-mono uppercase tracking-wider text-editorial-charcoal/50">
+                    <div className="flex items-center justify-between pt-3.5 border-t border-editorial-charcoal/10 text-[9px] font-mono uppercase tracking-wider text-[#1A1A1A]/50">
                       <span>By: <span className="text-editorial-charcoal font-bold">{rec.author}</span></span>
-                      <span className="inline-flex items-center gap-1 font-bold text-editorial-charcoal group-hover:text-[#C1121F] transition-colors leading-none">
-                        Consult Map <ArrowRight className="w-3 h-3 text-editorial-red" />
-                      </span>
+                      <div className="flex items-center gap-2.5">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setActiveRecipeId(rec.id);
+                            setTimeout(() => window.print(), 150);
+                          }}
+                          className="p-1.5 hover:text-editorial-red hover:bg-editorial-gray text-editorial-charcoal/60 transition-all rounded-none"
+                          title="Print Clean Recipe Card"
+                          aria-label={`Print ${rec.title} recipe`}
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                        </button>
+                        <span className="inline-flex items-center gap-1 font-bold text-editorial-charcoal group-hover:text-[#C1121F] transition-colors leading-none">
+                          Consult Map <ArrowRight className="w-3 h-3 text-editorial-red" />
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>

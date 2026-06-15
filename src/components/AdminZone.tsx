@@ -15,7 +15,12 @@ import {
   Database,
   FileJson,
   RefreshCcw,
-  Check as CheckedIcon
+  Check as CheckedIcon,
+  Mail,
+  Eye,
+  Send,
+  Smartphone,
+  Monitor
 } from "lucide-react";
 
 export default function AdminZone() {
@@ -40,13 +45,31 @@ export default function AdminZone() {
     reviews
   } = useApp();
 
-  // Selected sub tab: "stats" | "active-products" | "seller-approval-queue" | "orders-fulfillment" | "data-curator"
-  const [adminTab, setAdminTab] = useState<"stats" | "active-products" | "seller-approval-queue" | "orders-fulfillment" | "data-curator">("stats");
+  // Selected sub tab: "stats" | "active-products" | "seller-approval-queue" | "orders-fulfillment" | "data-curator" | "newsletter-preview"
+  const [adminTab, setAdminTab] = useState<"stats" | "active-products" | "seller-approval-queue" | "orders-fulfillment" | "data-curator" | "newsletter-preview">("stats");
 
   // Data Curator & Seeder states
   const [jsonText, setJsonText] = useState("");
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [importType, setImportType] = useState<"products" | "recipes">("products");
+
+  // Newsletter Preview states
+  const [newsletterSubject, setNewsletterSubject] = useState("Weekly Brine Dispatch: Crispy Spears & Smoked Ghost Chilis");
+  const [selectedNewsletterRecipeId, setSelectedNewsletterRecipeId] = useState("");
+  const [selectedNewsletterProductId, setSelectedNewsletterProductId] = useState("");
+  const [newsletterCustomIntro, setNewsletterCustomIntro] = useState(
+    "Greetings fermenters and spice seekers! In this week's release, we consult premium small-batch recipes and present dynamic seasonal jar drops from our organic member network. Elevate your culinary maps with custom lacto-fermented solutions!"
+  );
+  const [newsletterPreviewDevice, setNewsletterPreviewDevice] = useState<"desktop" | "mobile">("desktop");
+  const [newsletterAudience, setNewsletterAudience] = useState<"both" | "pickle" | "pepper">("both");
+
+  const activeRecipeForNewsletter = useMemo(() => {
+    return recipes.find(r => r.id === selectedNewsletterRecipeId) || recipes[0];
+  }, [recipes, selectedNewsletterRecipeId]);
+
+  const activeProductForNewsletter = useMemo(() => {
+    return products.find(p => p.id === selectedNewsletterProductId) || products[0];
+  }, [products, selectedNewsletterProductId]);
 
 
 
@@ -105,6 +128,7 @@ export default function AdminZone() {
             { id: "seller-approval-queue", label: `Sellers approvals (${pendingSubmissionsCount})` },
             { id: "orders-fulfillment", label: `Orders fulfill (${orders.length})` },
             { id: "data-curator", label: "Data Curation & Seed" },
+            { id: "newsletter-preview", label: "✉ Newsletter Preview" },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -956,6 +980,346 @@ export default function AdminZone() {
               >
                 🚀 Process &amp; Seed Collection
               </button>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
+      {/* 6. NEWSLETTER DISPATCH PREVIEW */}
+      {adminTab === "newsletter-preview" && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 text-left animate-in fade-in duration-300" id="newsletter-preview-section">
+          
+          {/* Email Dispatch Control Panel - 5 Columns */}
+          <div className="lg:col-span-5 space-y-6">
+            <div className="bg-white border border-editorial-charcoal/15 p-6 space-y-5 rounded-none">
+              
+              <div className="flex items-center gap-2 pb-2 border-b border-editorial-charcoal/10">
+                <Mail className="w-5 h-5 text-amber-600" />
+                <h3 className="font-serif text-base font-bold text-editorial-charcoal italic">Dispatch Publisher Panel</h3>
+              </div>
+
+              <p className="text-[11px] text-[#1A1A1A]/70 leading-relaxed font-sans">
+                Draft content and select featured listings for the upcoming distribution event. Your choices will propagate instantly to the live visual mock rendering envelope on the right.
+              </p>
+
+              {/* Form Controls */}
+              <div className="space-y-4 text-xs">
+                
+                {/* Subject Line */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold uppercase text-editorial-charcoal/50 block">Subject Headline</label>
+                  <input
+                    type="text"
+                    value={newsletterSubject}
+                    onChange={(e) => setNewsletterSubject(e.target.value)}
+                    className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2 text-xs focus:bg-white focus:outline-none focus:border-editorial-charcoal font-sans"
+                    placeholder="Enter dispatch email subject..."
+                  />
+                </div>
+
+                {/* Target Audience Segment Selector */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold uppercase text-editorial-charcoal/50 block">Dynamic Reader Segment</label>
+                  <select
+                    value={newsletterAudience}
+                    onChange={(e) => setNewsletterAudience(e.target.value as any)}
+                    className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2 text-xs focus:bg-white focus:outline-none focus:border-editorial-charcoal font-mono"
+                  >
+                    <option value="both">Both Pickles &amp; Peppers (All Registers)</option>
+                    <option value="pickle">Pickles Only (Vistula Spears / Ferments)</option>
+                    <option value="pepper">Peppers Only (Extreme Cures / Spice Heads)</option>
+                  </select>
+                </div>
+
+                {/* Selected Recipe selection */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold uppercase text-[#1A1A1A]/50 block">Featured Culinary Recipe Map</label>
+                  <select
+                    value={selectedNewsletterRecipeId}
+                    onChange={(e) => setSelectedNewsletterRecipeId(e.target.value)}
+                    className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2 text-xs focus:bg-white focus:outline-none focus:border-editorial-charcoal font-mono"
+                  >
+                    <option value="">-- Autoselect Default Recipe --</option>
+                    {recipes.map((r) => (
+                      <option key={r.id} value={r.id}>
+                        [{r.difficulty}] {r.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Selected Product selection */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold uppercase text-editorial-charcoal/50 block">Featured Micro-Batch Product Drop</label>
+                  <select
+                    value={selectedNewsletterProductId}
+                    onChange={(e) => setSelectedNewsletterProductId(e.target.value)}
+                    className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2 text-xs focus:bg-white focus:outline-none focus:border-editorial-charcoal font-mono"
+                  >
+                    <option value="">-- Autoselect Default Product --</option>
+                    {products.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} (${p.price.toFixed(2)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Custom Newsletter Intro editor */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono font-bold uppercase text-editorial-charcoal/50 block">Editorial Intro Column Copyset</label>
+                  <textarea
+                    value={newsletterCustomIntro}
+                    onChange={(e) => setNewsletterCustomIntro(e.target.value)}
+                    rows={4}
+                    className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2.5 text-xs focus:bg-white focus:outline-none focus:border-editorial-charcoal font-sans leading-relaxed text-editorial-charcoal"
+                    placeholder="Provide a seasonal farm update or master brine recommendation note..."
+                  />
+                  <span className="text-[9px] text-stone-400 font-mono">* Supports flat text paragraphs. HTML styling auto-wrapped inside dispatch templates.</span>
+                </div>
+
+                {/* Dispatch Button Trigger */}
+                <div className="pt-2 border-t border-stone-150">
+                  <button
+                    onClick={() => {
+                      addToast({
+                        title: "Weekly Dispatch Broadcast",
+                        message: `Newsletter queued successfully! Dispatched "${newsletterSubject}" to all active subscribers with a "${newsletterAudience}" preference profile.`,
+                        type: "success"
+                      });
+                    }}
+                    className="w-full py-2.5 bg-[#C1121F] hover:bg-stone-900 text-stone-100 px-4 font-mono text-[10px] uppercase font-black tracking-widest transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-3xs"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    Simulate Live Dispatch Release
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+            {/* Simulated Subscriber stats card */}
+            <div className="bg-editorial-gray border border-editorial-charcoal/15 p-5 space-y-3 rounded-none">
+              <span className="text-[9px] font-mono font-bold tracking-wider text-[#C1121F] uppercase block">Broadcast Analytics Mock logs</span>
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-white p-2.5 border border-stone-200">
+                  <span className="block text-stone-500 text-[8px] font-mono uppercase tracking-tight">Active Reach</span>
+                  <span className="font-mono text-sm font-black text-editorial-charcoal">1,412</span>
+                </div>
+                <div className="bg-white p-2.5 border border-stone-200">
+                  <span className="block text-stone-500 text-[8px] font-mono uppercase tracking-tight">Open Rate</span>
+                  <span className="font-mono text-sm font-black text-editorial-charcoal">84.2%</span>
+                </div>
+                <div className="bg-white p-2.5 border border-stone-200">
+                  <span className="block text-stone-500 text-[8px] font-mono uppercase tracking-tight">CTR Perf</span>
+                  <span className="font-mono text-sm font-black text-editorial-charcoal">39.1%</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Email Envelope Display Frame - 7 Columns */}
+          <div className="lg:col-span-7 space-y-4">
+            
+            {/* Display configuration bar */}
+            <div className="flex justify-between items-center bg-stone-100 border border-editorial-charcoal/15 p-3 rounded-none">
+              <div className="flex items-center gap-1.5">
+                <Eye className="w-4 h-4 text-editorial-charcoal/60" />
+                <span className="font-serif italic text-xs font-bold text-editorial-charcoal">Interactive Rendered Preview</span>
+              </div>
+
+              {/* Form factors */}
+              <div className="flex bg-white border border-editorial-charcoal/15">
+                <button
+                  type="button"
+                  onClick={() => setNewsletterPreviewDevice("desktop")}
+                  className={`p-1.5 transition-colors ${newsletterPreviewDevice === "desktop" ? "bg-editorial-charcoal text-white" : "text-stone-500 hover:bg-stone-100"}`}
+                  title="Desktop Outlook Monitor Wrap"
+                  aria-label="Desktop Monitor Display Form-Factor"
+                >
+                  <Monitor className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setNewsletterPreviewDevice("mobile")}
+                  className={`p-1.5 transition-colors ${newsletterPreviewDevice === "mobile" ? "bg-editorial-charcoal text-white" : "text-stone-500 hover:bg-stone-100"}`}
+                  title="Mobile Smartphone Wrap"
+                  aria-label="Mobile Phone Display Form-Factor"
+                >
+                  <Smartphone className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Real Mail Frame Mock Envelope wrapper */}
+            <div className={`transition-all duration-300 mx-auto ${newsletterPreviewDevice === "mobile" ? "max-w-md border-x-8 border-t-12 border-b-16 border-stone-800 rounded-3xl p-1 bg-stone-100 shadow-xl" : "w-full"}`}>
+              
+              {/* Mail client visual header */}
+              <div className="bg-stone-50 border border-stone-200 p-3.5 space-y-1.5 text-xs text-left selection:bg-[#C1121F]/10">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-stone-400 font-mono uppercase tracking-wider w-16">To:</span>
+                  <span className="text-stone-800 font-medium">subscriber@weekly-brine-digest.com</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-stone-400 font-mono uppercase tracking-wider w-16">From:</span>
+                  <span className="text-stone-800 font-medium font-mono text-[11px]">dispatch@pickle-pepper.co</span>
+                </div>
+                <div className="flex items-start gap-2 pt-1 border-t border-stone-150">
+                  <span className="text-[10px] text-stone-400 font-mono uppercase tracking-wider w-16">Subject:</span>
+                  <span className="text-editorial-charcoal font-serif font-black italic">{newsletterSubject || "(No Subject Headline entered)"}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-stone-400 font-mono uppercase tracking-wider w-16">Segment:</span>
+                  <span className="bg-amber-100 border border-amber-300/40 text-amber-900 px-1.5 py-0.5 rounded-none text-[8.5px] font-mono uppercase tracking-wider font-bold">
+                    {newsletterAudience === "both" ? "All Preference Subscribers" : newsletterAudience === "pickle" ? "Artisanal Pickles Preference Only" : "Spicy Peppers Preference Only"}
+                  </span>
+                </div>
+              </div>
+
+              {/* RENDERED EMAIL BODY CONTENT CONTAINER */}
+              <div className="bg-white border-x border-b border-stone-250 p-6 space-y-8 select-none font-sans text-editorial-charcoal">
+                
+                {/* Email Banner brand header */}
+                <div className="border-b-4 border-editorial-charcoal pb-4 text-center space-y-1">
+                  <span className="text-[9px] font-mono tracking-[0.2em] text-[#C1121F] font-bold block uppercase">
+                    ESTD 1892 • CRAFT FERMENT DISPATCHES
+                  </span>
+                  <h1 className="font-serif text-2xl font-black italic tracking-tight text-editorial-charcoal">
+                    The Pickle &amp; Pepper Gazette
+                  </h1>
+                  <div className="flex justify-between items-center text-[8.5px] font-mono text-stone-400 uppercase pt-2 tracking-wider">
+                    <span>Issue #34</span>
+                    <span>•</span>
+                    <span>June 2026</span>
+                    <span>•</span>
+                    <span>Weekly Curation</span>
+                  </div>
+                </div>
+
+                {/* Introductory editorial section */}
+                <div className="space-y-3.5 text-left leading-relaxed">
+                  <p className="font-serif italic text-base text-editorial-charcoal mb-1">Greetings Brine Aficionado,</p>
+                  <div className="text-stone-700 text-xs sm:text-[13px] leading-relaxed font-sans whitespace-pre-wrap">
+                    {newsletterCustomIntro || "Write your dynamic issue introduction column text in the panel on the left..."}
+                  </div>
+                </div>
+
+                {/* 1. FEATURED RECIPE SEGMENT (Dynamic database link) */}
+                {activeRecipeForNewsletter ? (
+                  <div className="border border-stone-200 bg-stone-50/50 p-4 space-y-4 text-left">
+                    <div className="space-y-1">
+                      <span className="text-[9px] font-mono uppercase text-[#C1121F] tracking-widest block font-bold">✦ CULINARY MAP OF THE WEEK</span>
+                      <h3 className="font-serif text-base font-bold italic text-editorial-charcoal">
+                        {activeRecipeForNewsletter.title}
+                      </h3>
+                      <p className="text-[11px] text-stone-500 leading-normal">
+                        {activeRecipeForNewsletter.description}
+                      </p>
+                    </div>
+
+                    {/* Meta bar */}
+                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-stone-200/60 text-center font-mono text-[9px]">
+                      <div>
+                        <span className="block text-stone-400 uppercase">Preptime</span>
+                        <span className="font-bold text-stone-700">{activeRecipeForNewsletter.prepTime}</span>
+                      </div>
+                      <div>
+                        <span className="block text-stone-400 uppercase">Cooktime</span>
+                        <span className="font-bold text-stone-700">{activeRecipeForNewsletter.cookTime}</span>
+                      </div>
+                      <div>
+                        <span className="block text-stone-400 uppercase">Complexity</span>
+                        <span className="font-bold text-[#C1121F]">{activeRecipeForNewsletter.difficulty}</span>
+                      </div>
+                    </div>
+
+                    {/* Link button */}
+                    <button
+                      type="button"
+                      className="w-full py-2 bg-editorial-charcoal hover:bg-neutral-800 text-[#FAF9F6] font-mono text-[9px] tracking-widest font-bold uppercase text-center cursor-pointer rounded-none border border-transparent block"
+                    >
+                      DEDUCE CULINARY MAP →
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-stone-100 border border-dashed border-stone-300 text-center text-xs italic text-stone-500">
+                    No active recipes matching catalog criteria.
+                  </div>
+                )}
+
+                {/* 2. EXCLUSIVE MICRO-BATCH JAR SPONSORSHIP */}
+                {activeProductForNewsletter ? (
+                  <div className="pt-2">
+                    <div className="bg-[#FAF9F6] border border-editorial-charcoal/15 p-4 text-left flex flex-col sm:flex-row gap-4 items-center">
+                      <img
+                        src={activeProductForNewsletter.image}
+                        alt={activeProductForNewsletter.name}
+                        className="w-20 h-20 object-cover border border-stone-200 rounded-none shrink-0"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="space-y-1.5 w-full">
+                        <span className="text-[9px] font-mono uppercase text-amber-600 tracking-widest block font-bold">🚚 FEATURED BATCH ON STREAM</span>
+                        <div className="flex items-start justify-between">
+                          <h4 className="font-serif text-sm font-black text-editorial-charcoal italic leading-tight">
+                            {activeProductForNewsletter.name}
+                          </h4>
+                          <span className="font-mono text-xs font-bold text-editorial-red whitespace-nowrap shrink-0 pl-2">
+                            ${activeProductForNewsletter.price.toFixed(2)}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-stone-600 font-sans leading-relaxed line-clamp-2">
+                          {activeProductForNewsletter.description}
+                        </p>
+                        <div className="text-[9.5px] font-mono text-stone-400 flex items-center justify-between pt-1">
+                          <span>Craft: {activeProductForNewsletter.sellerName}</span>
+                          <span>Unit Size: {activeProductForNewsletter.size || "16 oz jar"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="w-full py-2 bg-[#C1121F] hover:bg-red-800 text-white font-mono text-[9px] tracking-widest font-black uppercase text-center cursor-pointer rounded-none block border-t-0"
+                    >
+                      ACQUIRE EXCLUSIVE MICRO-BATCH JAR 📦
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-4 bg-stone-100 border border-dashed border-stone-300 text-center text-xs italic text-stone-500">
+                    No active inventory listings matching crop criteria.
+                  </div>
+                )}
+
+                {/* 3. QUICK BRINE TRIVIA COLUMN */}
+                <div className="p-4 bg-stone-100/40 border border-stone-200 text-left text-xs font-sans space-y-2">
+                  <h5 className="font-serif font-bold italic text-stone-800">Farmers Guild Fermenting Rule:</h5>
+                  <p className="text-stone-600 text-[11px] leading-relaxed">
+                    Always maintain sterile, anaerobic (submerged) conditions. Wild yeasts and airborne molds are locked outside when you keep lacto-active brines locked at 70°F water seals.
+                  </p>
+                </div>
+
+                {/* Footnotes & Regulatory Info */}
+                <div className="border-t border-stone-200 pt-6 text-center space-y-3.5 select-none font-sans text-stone-400 leading-normal">
+                  <p className="text-[9.5px]">
+                    You received this dispatch because you signed up for the weekly newsletter subscription at Pickle &amp; Pepper Co. Curation Labs.
+                  </p>
+                  <p className="text-[8.5px] font-mono tracking-tight text-stone-400">
+                    Crafted with pride in Artisan Alley, Cascadia Fermentations Block A.
+                  </p>
+                  <div className="flex justify-center gap-3.5 text-[9px] font-mono text-[#C1121F] font-bold uppercase">
+                    <span className="hover:underline cursor-pointer">Unsubscribe</span>
+                    <span>•</span>
+                    <span className="hover:underline cursor-pointer">Update Preferences</span>
+                    <span>•</span>
+                    <span className="hover:underline cursor-pointer">Farmer Registers</span>
+                  </div>
+                </div>
+
+              </div>
 
             </div>
 

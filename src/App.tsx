@@ -12,11 +12,34 @@ import CartDrawer from "./components/CartDrawer";
 import CheckoutModal from "./components/CheckoutModal";
 import FAQModal from "./components/FAQModal";
 import ToastContainer from "./components/ToastNotification";
-import { ArrowUp, Compass, Flame, Leaf, Truck, Instagram, Twitter, Pin } from "lucide-react";
+import { ArrowUp, Compass, Flame, Leaf, Truck, Instagram, Twitter, Pin, Mail, Check } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 function MainAppContent() {
-  const { userRole } = useApp();
+  const { userRole, addToast } = useApp();
+  
+  // Newsletter Subscription State
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterPreference, setNewsletterPreference] = useState<"both" | "pickle" | "pepper">("both");
+  const [newsletterSubscribed, setNewsletterSubscribed] = useState(false);
+
+  const handleNewsletterSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim()) return;
+    
+    setNewsletterSubscribed(true);
+    addToast({
+      title: "Subscription Active",
+      message: `Enrolled successfully in our Weekly Brine Dispatch! Guides targeting ${
+        newsletterPreference === "both" 
+          ? "both pickles & peppers" 
+          : newsletterPreference === "pickle" 
+            ? "artisanal pickles" 
+            : "spicy peppers"
+      } will arrive shortly.`,
+      type: "success"
+    });
+  };
   
   // Tab states: "market" | "recipes" | "seller" | "tracker" | "admin"
   const [activeTab, setActiveTab] = useState<string>("market");
@@ -221,6 +244,117 @@ function MainAppContent() {
 
       {/* Gourmet Pickling Manifesto Footer */}
       <footer className="bg-stone-900 text-stone-400 border-t border-stone-800 py-12 px-6" id="app-footer">
+        {/* Newsletter Subscription Row */}
+        <div className="max-w-7xl mx-auto border-b border-stone-800 pb-10 mb-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-8">
+          <div className="space-y-2 lg:max-w-xl text-left">
+            <span className="text-[10px] font-mono tracking-widest uppercase text-amber-500 font-bold block">
+              ✦ WEEKLY DISPATCH SIGNUP
+            </span>
+            <h3 className="font-serif text-xl font-bold text-stone-100 tracking-tight">
+              Get the Crispy &amp; Spicy Field Digests
+            </h3>
+            <p className="text-xs text-stone-400 leading-relaxed font-sans">
+              Sign up for curated weekly guides, micro-batch fermentation ratios, and live crop updates from our network of artisanal pepper farmers and pickle masters. No industrial filler, ever.
+            </p>
+          </div>
+
+          <div className="w-full lg:max-w-md text-left">
+            {!newsletterSubscribed ? (
+              <form 
+                onSubmit={handleNewsletterSubscribe}
+                className="space-y-3"
+                id="newsletter-signup-form"
+              >
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative grow">
+                    <span className="absolute left-3 top-2.5 text-stone-500">
+                      <Mail className="w-4 h-4" />
+                    </span>
+                    <input
+                      id="newsletter-email-input"
+                      type="email"
+                      required
+                      placeholder="Enter your email address"
+                      value={newsletterEmail}
+                      onChange={(e) => setNewsletterEmail(e.target.value)}
+                      className="w-full bg-stone-800/80 border border-stone-700 text-stone-100 placeholder-stone-500 text-xs py-2.5 pl-10 pr-3 focus:outline-none focus:border-amber-400 focus:bg-stone-800 transition-all rounded-none"
+                    />
+                  </div>
+                  <button
+                    id="newsletter-subscribe-button"
+                    type="submit"
+                    className="bg-amber-400 hover:bg-white text-stone-950 px-5 py-2.5 text-xs font-mono uppercase tracking-widest font-black transition-all cursor-pointer rounded-none flex items-center justify-center gap-1 shrink-0"
+                  >
+                    Subscribe
+                  </button>
+                </div>
+                
+                {/* Guide Preference Options */}
+                <div className="flex flex-wrap items-center gap-4 text-xs">
+                  <span className="text-stone-500 text-[10px] font-mono uppercase">Guide Preferences:</span>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-stone-300 hover:text-white transition-colors select-none">
+                    <input
+                      type="radio"
+                      name="newsletter-pref"
+                      value="both"
+                      checked={newsletterPreference === "both"}
+                      onChange={() => setNewsletterPreference("both")}
+                      className="accent-amber-400 h-3.5 w-3.5 cursor-pointer"
+                    />
+                    <span>Both Guides</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-stone-300 hover:text-white transition-colors select-none">
+                    <input
+                      type="radio"
+                      name="newsletter-pref"
+                      value="pickle"
+                      checked={newsletterPreference === "pickle"}
+                      onChange={() => setNewsletterPreference("pickle")}
+                      className="accent-amber-400 h-3.5 w-3.5 cursor-pointer"
+                    />
+                    <span>Artisanal Pickles</span>
+                  </label>
+                  <label className="flex items-center gap-1.5 cursor-pointer text-stone-300 hover:text-white transition-colors select-none">
+                    <input
+                      type="radio"
+                      name="newsletter-pref"
+                      value="pepper"
+                      checked={newsletterPreference === "pepper"}
+                      onChange={() => setNewsletterPreference("pepper")}
+                      className="accent-amber-400 h-3.5 w-3.5 cursor-pointer"
+                    />
+                    <span>Spicy Peppers</span>
+                  </label>
+                </div>
+              </form>
+            ) : (
+              <div 
+                className="p-4 bg-stone-800/40 border border-emerald-500/20 text-stone-200 text-xs space-y-2 animate-in fade-in duration-300"
+                id="newsletter-success-container"
+              >
+                <div className="flex items-center gap-2 text-emerald-400 font-bold">
+                  <Check className="w-5 h-5 shrink-0" />
+                  <span className="font-serif italic text-sm">Subscription Active!</span>
+                </div>
+                <p className="text-stone-400 leading-relaxed">
+                  We've registered <strong className="text-stone-200">{newsletterEmail}</strong> with our 
+                  <span className="text-amber-400"> {newsletterPreference === "both" ? "Pickles & Peppers" : newsletterPreference === "pickle" ? "Pickles-Only" : "Peppers-Only"}</span> preference digests. Look out for our weekly guide soon!
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setNewsletterEmail("");
+                    setNewsletterSubscribed(false);
+                  }}
+                  className="text-[9px] font-mono uppercase text-amber-500 hover:underline pt-1 block cursor-pointer bg-transparent border-none p-0"
+                >
+                  Change Email or Subscribe Another Address
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 text-left">
           
           {/* Col 1 Brand Statement */}

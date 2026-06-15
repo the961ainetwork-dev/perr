@@ -21,7 +21,229 @@ export default function PicklePepperMarketplace({
   selectedProductId,
   onClearSelectedProduct
 }: MarketplaceProps) {
-  const { products, recipes, reviews, addReview, addToCart, wishlist, toggleWishlist, headerSearchQuery, setHeaderSearchQuery } = useApp();
+  const { products, recipes, reviews, addReview, addToCart, wishlist, toggleWishlist, headerSearchQuery, setHeaderSearchQuery, addToast } = useApp();
+
+  // B2B Aladdin Alibaba mode states
+  const [sourcingMode, setSourcingMode] = useState<"retail" | "wholesale" | "rfq">("retail");
+
+  // Selection state for current wholesale configuring product
+  const [wholesaleConfigProduct, setWholesaleConfigProduct] = useState<Product | null>(null);
+  const [wholesaleQty, setWholesaleQty] = useState<number>(2); // MOQ default
+  const [privateLabel, setPrivateLabel] = useState<boolean>(false);
+  const [privateLabelText, setPrivateLabelText] = useState<string>("");
+  const [waxSealColor, setWaxSealColor] = useState<string>("gold");
+
+  // RFQ Sourcing States
+  const [rfqs, setRfqs] = useState<Array<{
+    id: string;
+    title: string;
+    description: string;
+    quantity: number;
+    unit: string;
+    category: string;
+    date: string;
+    buyer: string;
+    status: "active" | "review" | "awarded";
+    bids: Array<{
+      id: string;
+      sellerName: string;
+      pricePerUnit: number;
+      deliveryDays: number;
+      description: string;
+      rating: number;
+    }>;
+  }>>([
+    {
+      id: "rfq-101",
+      title: "Need 25 Barrels of Organic Traditional Salt-Brined Whole Dill Pickles",
+      description: "Looking for traditional lacto-fermented kosher dill pickles in heavy water barrel structures. No added yellow dyes or chemical stabilizers. Must have certification tags.",
+      quantity: 25,
+      unit: "Barrels (50 Gal)",
+      category: "pickle",
+      date: "2026-06-12",
+      buyer: "Cascadia Sourcing Corp.",
+      status: "active",
+      bids: [
+        {
+          id: "bid-101a",
+          sellerName: "Grateful Brines",
+          pricePerUnit: 185.00,
+          deliveryDays: 14,
+          description: "We can fulfill 25 premium oak-cured stoneware barrels doused in cascade spring runoff dill brines. Organic certified.",
+          rating: 4.8
+        },
+        {
+          id: "bid-101b",
+          sellerName: "Smokehouse Pickling Co.",
+          pricePerUnit: 172.50,
+          deliveryDays: 18,
+          description: "Our hickory-brined variant offers incredible depth of color and bite. Shipped stabilized in high grade aseptic food drums.",
+          rating: 4.9
+        }
+      ]
+    },
+    {
+      id: "rfq-102",
+      title: "Custom Branded Smoky Serrano Candied Chips in 8oz Custom Jars",
+      description: "Sourcing partner for monthly gourmet subscription boxes. We need custom printed labels on sweet serranos. Initially 200 cases of 12 jars.",
+      quantity: 200,
+      unit: "Cases (12 Jars)",
+      category: "pepper",
+      date: "2026-06-14",
+      buyer: "BiteCraft Subscription Co.",
+      status: "active",
+      bids: [
+        {
+          id: "bid-102a",
+          sellerName: "Sweet Sting Kitchens",
+          pricePerUnit: 88.00,
+          deliveryDays: 10,
+          description: "We specialize in serrano cane work. Our equipment outputs custom labels effortlessly. Trade assurance included.",
+          rating: 4.5
+        }
+      ]
+    }
+  ]);
+
+  // Form states to create custom RFQ
+  const [newRfqTitle, setNewRfqTitle] = useState("");
+  const [newRfqDesc, setNewRfqDesc] = useState("");
+  const [newRfqQuantity, setNewRfqQuantity] = useState<number>(10);
+  const [newRfqUnit, setNewRfqUnit] = useState("Cases (12 Jars)");
+  const [newRfqCategory, setNewRfqCategory] = useState("pickle");
+
+  const handleCreateRfq = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRfqTitle.trim() || !newRfqDesc.trim()) {
+      addToast({
+        title: "RFQ Invalid",
+        message: "Please specify valid contract criteria, volume metrics, and description specifications.",
+        type: "error"
+      });
+      return;
+    }
+
+    const rfqId = `rfq-${Date.now().toString().slice(-4)}`;
+    
+    // Create new RFQ
+    const newRfqEntry = {
+      id: rfqId,
+      title: newRfqTitle,
+      description: newRfqDesc,
+      quantity: Number(newRfqQuantity),
+      unit: newRfqUnit,
+      category: newRfqCategory,
+      date: new Date().toISOString().split("T")[0],
+      buyer: "My Sourcing Office (Self)",
+      status: "active" as const,
+      bids: [] as any[]
+    };
+
+    setRfqs(prev => [newRfqEntry, ...prev]);
+    
+    // Clear inputs
+    setNewRfqTitle("");
+    setNewRfqDesc("");
+    setNewRfqQuantity(10);
+    
+    addToast({
+      title: "B2B Contract Posted",
+      message: `Your trade RFQ specification [${rfqId}] is now broadcast to all accredited farmers of the network. Competitors have been alerted!`,
+      type: "success"
+    });
+
+    // Simulated Farmer Bidding in exactly 1.5 seconds!
+    setTimeout(() => {
+      setRfqs(currentRfqs => {
+        return currentRfqs.map(rfq => {
+          if (rfq.id === rfqId) {
+            // Add a mock response bid
+            return {
+              ...rfq,
+              bids: [
+                {
+                  id: `bid-sim-1`,
+                  sellerName: "Chili Head Farms",
+                  pricePerUnit: 79.50,
+                  deliveryDays: 7,
+                  description: "Automatic Bid: We can supply top grade high crunch pickles at custom sizes. Custom label embossing included at zero extra cost.",
+                  rating: 4.7
+                },
+                {
+                  id: `bid-sim-2`,
+                  sellerName: "Smokehouse Pickling Co.",
+                  pricePerUnit: 74.00,
+                  deliveryDays: 12,
+                  description: "Competitor Bid: Match and beat proposal with direct barrel logistics and 30-day security escrow trade protection.",
+                  rating: 4.9
+                }
+              ]
+            };
+          }
+          return rfq;
+        });
+      });
+
+      addToast({
+        title: "Competitive Proposals Received!",
+        message: `Two accredited farmers submitted proposals to your RFQ: [${newRfqTitle.substring(0, 30)}...] Inspect live quotes now!`,
+        type: "info"
+      });
+    }, 1500);
+  };
+
+  const handleAddWholesaleToBasket = (product: Product, qtyCases: number, pricePerCase: number, labelText: string, sealColor: string) => {
+    const totalVolume = qtyCases * 12; // 12 jars per case
+    const customWholesaleProduct: Product = {
+      ...product,
+      id: `wholesale-${product.id}-${Date.now()}`,
+      name: `📦 [B2B Wholesale Case-Lot] ${product.name} (Qty: ${qtyCases} Cases / ${totalVolume} Jars)`,
+      description: `Wholesale contract pack with custom specifications. Engraved Label Text: "${labelText || 'No Custom branding requested (Farm Standard Tag)'}". Custom Wax Seal closure: ${sealColor.toUpperCase() || 'GOLD'}`,
+      price: pricePerCase, // per case
+      stock: 99999, // unlimited availability for wholesale crop
+      size: `${qtyCases} Custom Cases (12x Jars)`,
+      sellerName: `${product.sellerName} [Direct B2B Sourcing]`
+    };
+
+    addToCart(customWholesaleProduct, qtyCases);
+    setWholesaleConfigProduct(null);
+    onOpenCart?.();
+    addToast({
+      title: "B2B Contract Placed",
+      message: `Successfully loaded ${qtyCases} customized wholesale cases of ${product.name} into your active procure drawer.`,
+      type: "success"
+    });
+  };
+
+  const handleAcceptBid = (rfqTitle: string, bidSeller: string, pricePerUnit: number, qty: number, unitName: string) => {
+    const customContractProduct: Product = {
+      id: `contract-${Date.now()}`,
+      name: `📋 [Awarded RFQ Contract] Sourced from ${bidSeller}`,
+      description: `Fulfilled specification: "${rfqTitle}". Volume: ${qty} ${unitName} at negotiated rate of $${pricePerUnit.toFixed(2)} per unit. Direct farm dispatch logistics selected.`,
+      price: pricePerUnit * qty, // bundle price
+      stock: 99999,
+      category: "pickle",
+      image: "https://images.unsplash.com/photo-1596797038530-2c107229654b?auto=format&fit=crop&q=80&w=800", // generic nice jar
+      spiceLevel: "Medium",
+      rating: 5,
+      reviewsCount: 0,
+      ingredients: ["Negotiated Sourced Raw Crop Elements", "Artisan Saline Escrow Seal"],
+      sellerName: bidSeller,
+      tags: ["RFQ Contract Sourced", "Trade Assurance", "Direct Air Shipping"]
+    };
+
+    addToCart(customContractProduct, 1);
+    
+    // Update RFQ status to awarded
+    setRfqs(prev => prev.map(r => r.title === rfqTitle ? { ...r, status: "awarded" as const } : r));
+
+    onOpenCart?.();
+    addToast({
+      title: "Contract Awarded!",
+      message: `Drafted B2B binding contract with ${bidSeller} and queued to your shopping drawer for checkout. Trade protection active.`,
+      type: "success"
+    });
+  };
 
   // Filters State (Synchronized with Header)
   const search = headerSearchQuery;
@@ -231,8 +453,49 @@ export default function PicklePepperMarketplace({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 pb-20" id="marketplace-zone">
+    <div className="max-w-7xl mx-auto px-6 pb-20 animate-in fade-in duration-300" id="marketplace-zone">
       
+      {/* 🇨🇳 ALIBABA / GLOBAL CONTRACT SOURCING PLATFORM BAR */}
+      <div className="bg-[#111111] border border-neutral-800 text-stone-100 p-5 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm rounded-none">
+        <div className="flex items-center gap-4 text-left">
+          <span className="bg-[#FF6600] text-white text-[10px] font-mono font-black uppercase tracking-widest px-3 py-1.5 rounded-none shadow-xs">
+            ALISOURCE B2B
+          </span>
+          <div>
+            <h2 className="font-serif text-lg font-bold text-[#FAF9F6] italic tracking-tight">Global Contract Pickling &amp; Pepper Sourcing</h2>
+            <p className="text-[10px] text-stone-400 font-sans mt-0.5">Artisanal farm-direct wholesale pipelines, custom wax-capped private labeling, and secure trade assurance logistics.</p>
+          </div>
+        </div>
+        
+        {/* Sourcing Tabs select toggles */}
+        <div className="flex bg-neutral-900 border border-neutral-800/80 p-1 font-mono text-[11px] w-full md:w-auto overflow-x-auto">
+          {[
+            { id: "retail", label: "🛒 B2C Individual Jars", desc: "Single Specs" },
+            { id: "wholesale", label: "📦 B2B Bulk Case-Lots", desc: "Direct MOQ Contract" },
+            { id: "rfq", label: "📋 RFQ Sourcing Deck", desc: "Get Supplier Bids" },
+          ].map((mode) => (
+            <button
+              key={mode.id}
+              onClick={() => {
+                setSourcingMode(mode.id as any);
+                addToast({
+                  title: `Switched to ${mode.label}`,
+                  message: `Welcome to our professional trade dynamic channel for ${mode.desc}.`,
+                  type: "info"
+                });
+              }}
+              className={`px-4 py-2 font-bold transition-all text-center rounded-none shrink-0 whitespace-nowrap cursor-pointer ${
+                sourcingMode === mode.id 
+                  ? "bg-[#FF6600] text-black" 
+                  : "text-stone-300 hover:text-white hover:bg-neutral-800"
+              }`}
+            >
+              <span className="block font-black">{mode.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Search and Filters Hub */}
       <div className="bg-white rounded-none p-6 md:p-8 border border-editorial-charcoal/15 space-y-6 mb-8 text-left">
         <div className="flex flex-col md:flex-row gap-4">
@@ -437,75 +700,270 @@ export default function PicklePepperMarketplace({
         )}
       </div>
 
-      {/* Products Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse" id="product-grid-skeleton">
-          {[...Array(8)].map((_, i) => (
-            <div key={i} className="bg-white rounded-none border border-editorial-charcoal/12 overflow-hidden flex flex-col h-full">
-              {/* Product Thumbnail container skeleton */}
-              <div className="relative h-56 bg-stone-100 flex items-center justify-center border-b border-editorial-charcoal/10">
-                <div className="w-10 h-10 bg-stone-200/40" />
-                <div className="absolute top-3 left-3 w-16 h-5 bg-stone-200/60" />
-                <div className="absolute top-3 right-3 w-8 h-8 bg-stone-200/60" />
-                <div className="absolute bottom-3 right-3 w-8 h-8 bg-stone-200/60" />
+      {/* Products Grid & B2B RFQ Channel switcher */}
+      {sourcingMode === "rfq" ? (
+        <div id="rfq-sourcing-portal" className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-in fade-in duration-300">
+          
+          {/* Broad RFQ Posting Form - 5 Columns */}
+          <div className="lg:col-span-5 space-y-6">
+            <form onSubmit={handleCreateRfq} className="bg-white border border-editorial-charcoal/15 p-6 space-y-5 text-left shadow-2xs">
+              <div className="border-b border-editorial-charcoal/10 pb-3 flex items-center justify-between">
+                <h3 className="font-serif text-base font-bold text-[#111111] italic flex items-center gap-1.5">
+                  📋 Publish Wholesale RFQ Spec
+                </h3>
               </div>
-              {/* Info block skeleton */}
-              <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
-                <div className="space-y-3 text-left">
-                  <div className="h-3 bg-stone-200/60 w-3/4" />
-                  <div className="h-5 bg-stone-200/85 w-11/12" />
-                  <div className="space-y-1.5 pt-1">
-                    <div className="h-3 bg-stone-100/95 w-full" />
-                    <div className="h-3 bg-stone-100/95 w-5/6" />
-                  </div>
+              <p className="text-[11px] text-stone-500 font-sans leading-relaxed">
+                Publish a Request for Quote (RFQ) to broadcast your custom pickling, brining, or specialty pepper specifications to our entire verified farmer network. Competitive bids of member farms appear below in seconds.
+              </p>
+
+              <div className="space-y-4 text-xs">
+                {/* Title */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#1A1A1A]/50 block">Target Product Spec/Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={newRfqTitle}
+                    onChange={(e) => setNewRfqTitle(e.target.value)}
+                    className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2.5 text-xs focus:bg-white focus:outline-none rounded-none"
+                    placeholder="e.g. 50 Barrels of Low-Sodium Organic Kosher Dills"
+                  />
                 </div>
-                {/* Rating summary skeleton */}
-                <div className="flex items-center justify-between gap-1.5 pt-1">
-                  <div className="flex gap-1">
-                    {[...Array(5)].map((_, idx) => (
-                      <div key={idx} className="w-3 h-3 bg-stone-200/50" />
-                    ))}
-                  </div>
-                  <div className="flex gap-1.5">
-                    <div className="w-14 h-5 bg-stone-200/50" />
-                    <div className="w-12 h-5 bg-stone-200/50" />
-                  </div>
-                </div>
-                {/* Line partition & price tag skeleton */}
-                <div className="border-t border-editorial-charcoal/10 pt-4 flex items-center justify-between">
+
+                {/* Sourcing Category & Volume */}
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <div className="h-2.5 bg-stone-100 w-10" />
-                    <div className="h-5 bg-stone-200/70 w-16" />
+                    <label className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#1A1A1A]/50 block">Spec Category</label>
+                    <select
+                      value={newRfqCategory}
+                      onChange={(e) => setNewRfqCategory(e.target.value)}
+                      className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2 text-xs font-mono rounded-none"
+                    >
+                      <option value="pickle">Pickle Curing</option>
+                      <option value="pepper">Hot Pepper Drops</option>
+                      <option value="oil">Oils &amp; Starters</option>
+                    </select>
                   </div>
-                  <div className="h-9 bg-stone-200 w-24" />
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#1A1A1A]/50 block">Volume Unit</label>
+                    <select
+                      value={newRfqUnit}
+                      onChange={(e) => setNewRfqUnit(e.target.value)}
+                      className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2 text-xs font-mono rounded-none"
+                    >
+                      <option value="Cases (12 Jars)">Cases (12 Jars)</option>
+                      <option value="Barrels (50 Gal)">Barrels (50 Gal)</option>
+                      <option value="Gallon Drums">Gallon Drums</option>
+                      <option value="Bulk Lbs">Bulk Lbs</option>
+                    </select>
+                  </div>
                 </div>
+
+                {/* Quantity */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#1A1A1A]/50 block">Quantity Target (MOQ 10 Units)</label>
+                  <input
+                    type="number"
+                    min="10"
+                    required
+                    value={newRfqQuantity}
+                    onChange={(e) => setNewRfqQuantity(Number(e.target.value))}
+                    className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2.5 text-xs font-mono focus:bg-white focus:outline-none rounded-none"
+                  />
+                </div>
+
+                {/* Detailed Specifications */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-mono uppercase tracking-wider font-bold text-[#1A1A1A]/50 block">Detailed Quality Spec Criteria</label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={newRfqDesc}
+                    onChange={(e) => setNewRfqDesc(e.target.value)}
+                    className="w-full border border-editorial-charcoal/20 bg-stone-50/50 p-2.5 text-xs focus:bg-white focus:outline-none leading-relaxed font-sans rounded-none"
+                    placeholder="Describe detailed specifications. e.g. Requires organic garlic cloves, oak-wood barrels curing for 30 days minimum, and 2.5% saline target for trade verification tags..."
+                  />
+                </div>
+
+                {/* Submit RFQ */}
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-[#FF6600] text-black font-mono tracking-widest font-black uppercase text-center cursor-pointer hover:bg-black hover:text-[#FAF9F6] transition-all rounded-none shadow-3xs"
+                >
+                  Post To Sourcing Registries 🚀
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Active Broadcasts List - 7 Columns */}
+          <div className="lg:col-span-7 space-y-6 text-left">
+            <div className="bg-white border border-editorial-charcoal/15 p-6 shadow-2xs space-y-4 rounded-none">
+              <div className="pb-3 border-b border-editorial-charcoal/10 flex justify-between items-center">
+                <h3 className="font-serif text-base font-bold text-editorial-charcoal italic">
+                  Live Sourcing Registry Feed ({rfqs.length} Active)
+                </h3>
+                <span className="text-[10px] font-mono text-stone-400">Escrow Protected Trade Routing</span>
+              </div>
+
+              <div className="space-y-5">
+                {rfqs.map((rfq) => (
+                  <div key={rfq.id} className="border border-stone-150 p-5 space-y-4 hover:border-[#FF6600]/45 transition-all bg-stone-50/25 rounded-none animate-in fade-in duration-200">
+                    <div className="flex justify-between items-start gap-3 flex-wrap sm:flex-nowrap">
+                      <div>
+                        <span className="text-[8px] font-mono bg-neutral-900 text-[#FF6600] font-extrabold px-1.5 py-0.5 uppercase tracking-widest mr-2 inline-block">
+                          RFQ SPEC {rfq.id}
+                        </span>
+                        <span className="text-[9px] font-mono text-stone-400">{rfq.date} • Buyer: {rfq.buyer}</span>
+                        <h4 className="font-serif text-md font-bold text-editorial-charcoal mt-2 italic leading-tight">
+                          {rfq.title}
+                        </h4>
+                      </div>
+                      <span className={`text-[8px] font-mono uppercase tracking-wider font-extrabold px-2.5 py-1 border leading-none shrink-0 rounded-none ${
+                        rfq.status === "awarded" 
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-250" 
+                          : "bg-[#FF6600]/10 text-[#FF6600] border-[#FF6600]/25 animate-pulse"
+                      }`}>
+                        {rfq.status === "awarded" ? "✓ Contract Awarded" : "● Seeking Farm Bids"}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-stone-600 font-sans leading-relaxed">{rfq.description}</p>
+
+                    <div className="bg-white border border-stone-200 p-3 flex justify-between items-center text-[10.5px] font-mono">
+                      <span>Volume Requested: <strong className="text-editorial-charcoal">{rfq.quantity} {rfq.unit}</strong></span>
+                      <span className="text-stone-300">|</span>
+                      <span>Target: <strong className="text-[#FF6600] uppercase">{rfq.category}</strong></span>
+                    </div>
+
+                    {/* Bids received area */}
+                    <div className="space-y-3 pt-2">
+                      <h5 className="font-mono text-[9px] font-bold text-[#1A1A1A]/50 uppercase tracking-widest block">
+                        Competitive Proposals Received ({rfq.bids.length})
+                      </h5>
+                      
+                      {rfq.bids.length === 0 ? (
+                        <div className="p-4 bg-stone-100/50 border border-dashed border-stone-200 text-center text-xs text-stone-400 italic font-mono">
+                          Awaiting pricing responses from verified farms...
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {rfq.bids.map((bid) => (
+                            <div key={bid.id} className="bg-stone-50 border border-stone-200 p-4 space-y-3 relative overflow-hidden group rounded-none">
+                              <div className="absolute top-0 right-0 bg-[#FF6600] text-black font-mono text-[8.5px] font-bold px-2 py-0.5 uppercase tracking-wider">
+                                Verified Supplier
+                              </div>
+                              <div className="flex justify-between items-start gap-4 flex-wrap sm:flex-nowrap">
+                                <div>
+                                  <span className="font-serif italic font-bold text-neutral-800 text-sm block">
+                                    {bid.sellerName}
+                                  </span>
+                                  <span className="text-[9px] font-mono text-stone-400">Seller Trust Level: ★ {bid.rating} (All Clear Reviews)</span>
+                                </div>
+                                <div className="text-right">
+                                  <span className="block text-stone-400 text-[9px] font-mono">Quoted Rate</span>
+                                  <span className="font-mono text-sm font-black text-rose-800">${bid.pricePerUnit.toFixed(2)}<span className="text-xs font-normal text-stone-400">/{rfq.unit.replace(/Cases|Barrels|Gallon|Bulk\s*/gi, "").replace(/\(.*?\)/, "").trim()}</span></span>
+                                </div>
+                              </div>
+
+                              <p className="text-[11.5px] text-stone-600 leading-relaxed font-sans italic">{bid.description}</p>
+
+                              <div className="flex justify-between items-center pt-2.5 border-t border-stone-200 font-mono text-[9px] flex-wrap gap-2">
+                                <span>Transit Dispatch: <strong className="text-neutral-700">{bid.deliveryDays} Days</strong></span>
+                                {rfq.status !== "awarded" ? (
+                                  <button
+                                    onClick={() => handleAcceptBid(rfq.title, bid.sellerName, bid.pricePerUnit, rfq.quantity, rfq.unit)}
+                                    className="px-3.5 py-1.5 bg-black text-stone-100 hover:bg-[#FF6600] hover:text-black transition-all text-[9.5px] font-mono uppercase font-black tracking-widest cursor-pointer rounded-none border border-transparent whitespace-nowrap"
+                                  >
+                                    Accept Bid &amp; Queue Contract →
+                                  </button>
+                                ) : (
+                                  <span className="text-emerald-700 font-bold font-mono">✓ Contract Awarded</span>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <div className="bg-[#FAF9F6] border border-dashed border-editorial-charcoal/20 rounded-none py-16 text-center max-w-lg mx-auto">
-          <AlertCircle className="w-10 h-10 text-editorial-charcoal/30 mx-auto mb-3" />
-          <h3 className="font-serif text-lg font-bold text-editorial-charcoal italic">No batch matches your filter</h3>
-          <p className="text-editorial-charcoal/60 text-xs mt-2 max-w-xs mx-auto font-sans leading-relaxed">
-            Try adjusting your heat level, category, or clear search queries. Custom artisanal pickles are waiting!
-          </p>
-          <button
-            onClick={() => {
-              setSearch("");
-              setSelectedCategory("all");
-              setSelectedSpice("all");
-              setShowOnlyWishlist(false);
-              setPricePreset("all");
-              setCustomMaxPrice(maxPriceOfAllProducts || 30);
-            }}
-            className="mt-6 px-5 py-3 bg-editorial-charcoal text-editorial-cream rounded-none text-xs font-mono uppercase tracking-widest font-bold hover:bg-editorial-charcoal/90 transition-all"
-          >
-            View All Marketplace Batches
-          </button>
+          </div>
+
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" id="product-grid">
+        <>
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-pulse" id="product-grid-skeleton">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="bg-white rounded-none border border-editorial-charcoal/12 overflow-hidden flex flex-col h-full">
+                  {/* Product Thumbnail container skeleton */}
+                  <div className="relative h-56 bg-stone-100 flex items-center justify-center border-b border-editorial-charcoal/10">
+                    <div className="w-10 h-10 bg-stone-200/40" />
+                    <div className="absolute top-3 left-3 w-16 h-5 bg-stone-200/60" />
+                    <div className="absolute top-3 right-3 w-8 h-8 bg-stone-200/60" />
+                    <div className="absolute bottom-3 right-3 w-8 h-8 bg-stone-200/60" />
+                  </div>
+                  {/* Info block skeleton */}
+                  <div className="p-5 flex flex-col flex-1 justify-between space-y-4">
+                    <div className="space-y-3 text-left">
+                      <div className="h-3 bg-stone-200/60 w-3/4" />
+                      <div className="h-5 bg-stone-200/85 w-11/12" />
+                      <div className="space-y-1.5 pt-1">
+                        <div className="h-3 bg-stone-100/95 w-full" />
+                        <div className="h-3 bg-stone-100/95 w-5/6" />
+                      </div>
+                    </div>
+                    {/* Rating summary skeleton */}
+                    <div className="flex items-center justify-between gap-1.5 pt-1">
+                      <div className="flex gap-1">
+                        {[...Array(5)].map((_, idx) => (
+                          <div key={idx} className="w-3 h-3 bg-stone-200/50" />
+                        ))}
+                      </div>
+                      <div className="flex gap-1.5">
+                        <div className="w-14 h-5 bg-stone-200/50" />
+                        <div className="w-12 h-5 bg-stone-200/50" />
+                      </div>
+                    </div>
+                    {/* Line partition & price tag skeleton */}
+                    <div className="border-t border-editorial-charcoal/10 pt-4 flex items-center justify-between">
+                      <div className="space-y-1">
+                        <div className="h-2.5 bg-stone-100 w-10" />
+                        <div className="h-5 bg-stone-200/70 w-16" />
+                      </div>
+                      <div className="h-9 bg-stone-200 w-24" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredProducts.length === 0 ? (
+            <div className="bg-[#FAF9F6] border border-dashed border-editorial-charcoal/20 rounded-none py-16 text-center max-w-lg mx-auto">
+              <AlertCircle className="w-10 h-10 text-editorial-charcoal/30 mx-auto mb-3" />
+              <h3 className="font-serif text-lg font-bold text-editorial-charcoal italic">No batch matches your filter</h3>
+              <p className="text-editorial-charcoal/60 text-xs mt-2 max-w-xs mx-auto font-sans leading-relaxed">
+                Try adjusting your heat level, category, or clear search queries. Custom artisanal pickles are waiting!
+              </p>
+              <button
+                onClick={() => {
+                  setSearch("");
+                  setSelectedCategory("all");
+                  setSelectedSpice("all");
+                  setShowOnlyWishlist(false);
+                  setPricePreset("all");
+                  setCustomMaxPrice(maxPriceOfAllProducts || 30);
+                }}
+                className="mt-6 px-5 py-3 bg-editorial-charcoal text-editorial-cream rounded-none text-xs font-mono uppercase tracking-widest font-bold hover:bg-editorial-charcoal/90 transition-all cursor-pointer"
+              >
+                View All Marketplace Batches
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in" id="product-grid">
           {filteredProducts.map((p) => {
             const hasLowStock = p.stock <= 15;
             return (
@@ -639,33 +1097,60 @@ export default function PicklePepperMarketplace({
 
                   {/* Line partition */}
                   <div className="border-t border-editorial-charcoal/10 pt-4 flex items-center justify-between">
-                    <div>
-                      <span className="text-editorial-charcoal/40 text-[9px] block font-mono uppercase tracking-wide leading-none mb-1">Vol: {p.size || "16 oz Jar"}</span>
-                      <span className="text-editorial-charcoal font-serif text-lg font-bold">
-                        ${p.price.toFixed(2)}
-                      </span>
-                    </div>
-
-                    {/* Add to cart action buttons */}
-                    {p.stock > 0 ? (
-                      <button
-                        id={`add-to-cart-btn-${p.id}`}
-                        onClick={() => {
-                          addToCart(p, 1);
-                          onOpenCart?.();
-                        }}
-                        className="bg-editorial-charcoal text-editorial-cream border border-editorial-charcoal p-2.5 rounded-none font-mono uppercase tracking-widest text-[10px] hover:bg-editorial-red hover:border-editorial-red transition-all shadow-2xs"
-                        title="Add delicious jar to shopping cart"
-                      >
-                        Add to basket
-                      </button>
+                    {sourcingMode === "wholesale" ? (
+                      <>
+                        <div className="text-left font-mono">
+                          <span className="text-stone-400 text-[8px] block uppercase tracking-wide leading-none mb-1">Custom Case (12 Jars)</span>
+                          <span className="text-rose-800 text-[9.5px] font-bold block leading-none mb-1">MOQ: 2 Cases</span>
+                          <span className="text-editorial-charcoal font-serif text-sm font-black">
+                            ${(p.price * 12 * 0.7).toFixed(2)} - ${(p.price * 12 * 0.9).toFixed(2)} <span className="text-[9px] font-normal text-stone-400">/cs</span>
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setWholesaleConfigProduct(p);
+                            setWholesaleQty(2); // MOQ
+                            setPrivateLabel(false);
+                            setPrivateLabelText("");
+                            setWaxSealColor("gold");
+                          }}
+                          className="bg-[#FF6600] text-black border border-[#FF6600] px-3.5 py-2.5 rounded-none font-mono uppercase tracking-widest text-[9.5px] hover:bg-black hover:text-[#FAF9F6] transition-all shadow-2xs font-extrabold cursor-pointer"
+                          title="Configure custom brand private packaging & volume tiers"
+                        >
+                          Specs &amp; Quote
+                        </button>
+                      </>
                     ) : (
-                      <button
-                        className="bg-stone-50 text-stone-400 border border-stone-200 rounded-none px-3 py-2 text-[10px] font-mono uppercase tracking-wide cursor-not-allowed"
-                        disabled
-                      >
-                        Sold Out
-                      </button>
+                      <>
+                        <div>
+                          <span className="text-editorial-charcoal/40 text-[9px] block font-mono uppercase tracking-wide leading-none mb-1">Vol: {p.size || "16 oz Jar"}</span>
+                          <span className="text-editorial-charcoal font-serif text-lg font-bold">
+                            ${p.price.toFixed(2)}
+                          </span>
+                        </div>
+
+                        {/* Add to cart action buttons */}
+                        {p.stock > 0 ? (
+                          <button
+                            id={`add-to-cart-btn-${p.id}`}
+                            onClick={() => {
+                              addToCart(p, 1);
+                              onOpenCart?.();
+                            }}
+                            className="bg-editorial-charcoal text-editorial-cream border border-editorial-charcoal p-2.5 rounded-none font-mono uppercase tracking-widest text-[10px] hover:bg-editorial-red hover:border-editorial-red transition-all shadow-2xs cursor-pointer"
+                            title="Add delicious jar to shopping cart"
+                          >
+                            Add to basket
+                          </button>
+                        ) : (
+                          <button
+                            className="bg-stone-50 text-stone-400 border border-stone-200 rounded-none px-3 py-2 text-[10px] font-mono uppercase tracking-wide cursor-not-allowed"
+                            disabled
+                          >
+                            Sold Out
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -674,6 +1159,272 @@ export default function PicklePepperMarketplace({
           })}
         </div>
       )}
+        </>
+      )}
+
+      {/* B2B WHOLESALE CONFIGURATOR MODAL */}
+      {wholesaleConfigProduct && (() => {
+        const prod = wholesaleConfigProduct;
+        const retailSingleJarPrice = prod.price;
+        const baseCasePrice = retailSingleJarPrice * 12; // 12 jars per case
+        
+        // Dynamic Tier Price calculations:
+        // Tier 1 (2-9 cs): 10% off
+        // Tier 2 (10-49 cs): 20% off
+        // Tier 3 (50+ cs): 30% off
+        let discountPct = 0.10;
+        let activeTier = "2 - 9 Cases";
+        if (wholesaleQty >= 10 && wholesaleQty <= 49) {
+          discountPct = 0.20;
+          activeTier = "10 - 49 Cases";
+        } else if (wholesaleQty >= 50) {
+          discountPct = 0.30;
+          activeTier = "50+ Cases";
+        }
+
+        const rawPricePerCase = baseCasePrice * (1 - discountPct);
+        const privateLabelSurcharge = privateLabel ? 3.00 : 0.00;
+        const finalPricePerCase = rawPricePerCase + privateLabelSurcharge;
+        const totalContractPrice = finalPricePerCase * wholesaleQty;
+        const equivalentJarPrice = finalPricePerCase / 12;
+
+        return (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-neutral-950/50 backdrop-blur-2xs flex items-center justify-center p-4">
+            <div className="bg-white rounded-none max-w-2xl w-full border-2 border-black overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+              {/* Modal Header */}
+              <div className="p-4 bg-[#111111] text-white flex items-center justify-between text-left">
+                <div className="flex items-center gap-2">
+                  <span className="bg-[#FF6600] text-black text-[9px] font-mono font-black uppercase tracking-widest px-2.5 py-1">
+                    WHOLESALE SPEC
+                  </span>
+                  <span className="text-[11px] font-mono text-stone-300">Contract Generator • Escrow Secured</span>
+                </div>
+                <button
+                  onClick={() => setWholesaleConfigProduct(null)}
+                  className="text-stone-400 hover:text-white font-bold font-mono text-sm uppercase p-1"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Scroll Container */}
+              <div className="overflow-y-auto flex-1 p-6 space-y-6 text-left">
+                <div className="flex gap-4 border-b border-stone-200 pb-4">
+                  <img
+                    src={prod.image}
+                    alt={prod.name}
+                    className="w-20 h-20 object-cover border border-black/10"
+                    referrerPolicy="no-referrer"
+                  />
+                  <div>
+                    <span className="text-[9px] font-mono uppercase tracking-wider text-rose-800 font-bold">Manufacturer: {prod.sellerName}</span>
+                    <h3 className="font-serif text-lg font-bold italic text-neutral-900 leading-tight">{prod.name}</h3>
+                    <p className="text-[11px] text-stone-500 font-sans mt-0.5 max-w-md line-clamp-1">{prod.description}</p>
+                    <div className="flex gap-3 text-[10px] font-mono mt-1 text-stone-400">
+                      <span>Ref Jar Vol: {prod.size || "16 oz"}</span>
+                      <span>•</span>
+                      <span>Singles Spot: ${prod.price.toFixed(2)}/ea</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 1. Sourcing volume Discount Matrix */}
+                <div className="space-y-3">
+                  <h4 className="font-mono text-[9px] font-extrabold uppercase tracking-widest text-[#1A1A1A]/40 block">
+                    1. Volume Discount Tier Matrix
+                  </h4>
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs font-mono">
+                    {[
+                      { range: "2 - 9 cases", discount: "-10% Off", rate: baseCasePrice * 0.9, info: "Spot contract" },
+                      { range: "10 - 49 cases", discount: "-20% Off", rate: baseCasePrice * 0.8, info: "Industrial Lot" },
+                      { range: "50+ cases", discount: "-30% Off", rate: baseCasePrice * 0.7, info: "Crop Master Contract" },
+                    ].map((tier) => {
+                      const isCurrent = activeTier.toLowerCase() === tier.range;
+                      return (
+                        <div
+                          key={tier.range}
+                          className={`p-3 border transition-all ${
+                            isCurrent
+                              ? "bg-[#FF6600]/10 border-[#FF6600] text-black shadow-3xs"
+                              : "bg-stone-50/50 border-stone-200 text-stone-500"
+                          }`}
+                        >
+                          <span className="block text-[10px] uppercase font-bold">{tier.range}</span>
+                          <span className="block text-sm font-black text-rose-800 mt-1">{tier.discount}</span>
+                          <span className="block text-xs font-bold mt-0.5">${tier.rate.toFixed(2)} /cs</span>
+                          <span className="text-[8px] text-stone-400 font-normal">{tier.info}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 2. Configure quantity & specs */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Left Column: Qty & Labeling */}
+                  <div className="space-y-4">
+                    <h4 className="font-mono text-[9px] font-extrabold uppercase tracking-widest text-[#1A1A1A]/40">
+                      2. Sourcing Quantity
+                    </h4>
+                    
+                    <div className="p-4 bg-stone-50 border border-stone-200 space-y-3">
+                      <div className="flex justify-between items-center text-xs font-mono">
+                        <span className="font-bold text-stone-700">Contract Quantity (Cases)</span>
+                        <span className="text-rose-800 text-[10px] font-bold">MOQ: 2</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setWholesaleQty(Math.max(2, wholesaleQty - 1))}
+                          className="px-3 py-1.5 bg-neutral-900 text-white font-mono hover:bg-[#FF6600] hover:text-black transition-all cursor-pointer"
+                        >
+                          -
+                        </button>
+                        <input
+                          type="number"
+                          min="2"
+                          value={wholesaleQty}
+                          onChange={(e) => setWholesaleQty(Math.max(2, Number(e.target.value)))}
+                          className="flex-1 text-center font-mono border border-stone-300 text-sm focus:outline-none"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setWholesaleQty(wholesaleQty + 1)}
+                          className="px-3 py-1.5 bg-neutral-900 text-white font-mono hover:bg-[#FF6600] hover:text-black transition-all cursor-pointer"
+                        >
+                          +
+                        </button>
+                      </div>
+                      <span className="text-[10px] text-stone-400 font-mono block text-center">
+                        Total Jars: {wholesaleQty * 12} specimens
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      <label className="flex items-center gap-2 cursor-pointer p-2 hover:bg-stone-50 rounded border border-stone-200 text-xs font-mono">
+                        <input
+                          type="checkbox"
+                          checked={privateLabel}
+                          onChange={(e) => setPrivateLabel(e.target.checked)}
+                          className="accent-[#FF6600] w-3.5 h-3.5"
+                        />
+                        <div>
+                          <span className="font-bold text-neutral-800 block">Apply Private Branding Labels</span>
+                          <span className="text-[9px] text-[#FF6600] font-black tracking-widest block font-mono">+ $3.00 / CASE CONTRACT fee</span>
+                        </div>
+                      </label>
+
+                      {privateLabel && (
+                        <div className="space-y-1.5 animate-in slide-in-from-top-1 duration-200 text-xs">
+                          <label className="text-[9px] font-mono text-stone-400 uppercase tracking-wider block">Custom Brand Title To Engrave</label>
+                          <input
+                            type="text"
+                            required
+                            value={privateLabelText}
+                            onChange={(e) => setPrivateLabelText(e.target.value)}
+                            className="w-full border border-stone-300 p-2 text-xs focus:outline-none focus:border-black rounded-none"
+                            placeholder="e.g. Trader Joe's Premium Reserve"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Custom Wax Seal & Verification */}
+                  <div className="space-y-4">
+                    <h4 className="font-mono text-[9px] font-extrabold uppercase tracking-widest text-[#1A1A1A]/40">
+                      3. Wax Seal Capping Specification
+                    </h4>
+
+                    <div className="p-4 bg-stone-50 border border-stone-200 text-xs space-y-3">
+                      <label className="text-[9.5px] font-mono text-stone-500 uppercase block">Choose Aesthetic Capping Wax</label>
+                      <select
+                        value={waxSealColor}
+                        onChange={(e) => setWaxSealColor(e.target.value)}
+                        className="w-full p-2 border border-stone-300 bg-white font-mono rounded-none"
+                      >
+                        <option value="gold">🏅 Imperial Gold (Royal Traditional)</option>
+                        <option value="emerald">💚 Emerald Vine (Garden Certified)</option>
+                        <option value="crimson">❤️ Crimson Fire (Hot/Spinal Spark)</option>
+                        <option value="matte-black">🖤 Pitch Black (Secret Dark Room Ferment)</option>
+                        <option value="royal-blue">💙 Ocean Salt (Lacto Certified Marine)</option>
+                      </select>
+                      <p className="text-[10px] text-stone-400 font-sans italic leading-relaxed">
+                        Each individual jar in your custom wholesale case will be hand-dipped in organic hot beeswax matching this tone block.
+                      </p>
+                    </div>
+
+                    {/* Trade Protection Stamp */}
+                    <div className="border border-amber-300 bg-amber-50/50 p-3.5 space-y-1 rounded-none text-left">
+                      <div className="flex items-center gap-1 text-amber-900 font-mono text-[10px] font-black uppercase tracking-wider">
+                        <span>🛡️ Trade Assurance Protected</span>
+                      </div>
+                      <p className="text-[10px] text-amber-800 leading-normal font-sans">
+                        Contract payment stays locked in trust escrow. Sourced specimens are insured from local farm shipping to destination delivery.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Live dynamic Quote Subtotal Breakdown */}
+                <div className="bg-neutral-900 text-white p-4 font-mono text-xs rounded-none space-y-2">
+                  <span className="text-[9px] text-[#FF6600] font-black uppercase tracking-widest block">
+                    Dynamic Wholesale Sourcing Contract Quotation
+                  </span>
+                  
+                  <div className="grid grid-cols-2 gap-1.5 pt-2 text-[11px] text-stone-300">
+                    <span>Base rate per case ({activeTier}):</span>
+                    <span className="text-right text-white">${rawPricePerCase.toFixed(2)}/cs</span>
+
+                    {privateLabel && (
+                      <>
+                        <span>Private label surcharge:</span>
+                        <span className="text-right text-white">+ $3.00/cs</span>
+                      </>
+                    )}
+
+                    <span>Total cases requested:</span>
+                    <span className="text-right text-white">x {wholesaleQty} cases</span>
+                  </div>
+
+                  <div className="border-t border-neutral-800 pt-3 flex justify-between items-baseline">
+                    <span className="font-bold text-stone-200 text-xs">Total Sourcing Subtotal:</span>
+                    <div className="text-right">
+                      <span className="font-serif italic font-black text-lg text-[#FF6600] block">
+                        ${totalContractPrice.toFixed(2)}
+                      </span>
+                      <span className="text-[9px] text-stone-400 block font-mono">
+                        (Equivalent rate only: ${(equivalentJarPrice).toFixed(2)} / jar specimen)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              {/* Modal Footer */}
+              <div className="p-4 bg-stone-100 border-t border-stone-200 flex justify-between items-center flex-wrap gap-2 text-xs">
+                <span className="text-[10px] font-mono text-stone-400">Escrow Dispatch Pipeline: 10 Days Lead Time</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setWholesaleConfigProduct(null)}
+                    className="px-4 py-2 border border-stone-300 text-stone-600 font-mono hover:bg-stone-200 uppercase transition-all rounded-none font-bold"
+                  >
+                    Cancel Sourcing
+                  </button>
+                  <button
+                    onClick={() => handleAddWholesaleToBasket(prod, wholesaleQty, finalPricePerCase, privateLabelText, waxSealColor)}
+                    className="px-5 py-2.5 bg-[#FF6600] text-black font-mono hover:bg-black hover:text-[#FAF9F6] uppercase font-bold transition-all rounded-none tracking-widest shadow-md"
+                  >
+                    Add Contract To Basket 🛒
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        );
+      })()}
 
       {/* DYNAMIC PRODUCT DETAILS MODAL */}
       {selectedProduct && (
