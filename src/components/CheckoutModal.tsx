@@ -31,6 +31,7 @@ export default function CheckoutModal({ isOpen, onClose, onOrderCompleted }: Che
   // Generated Order Receipt object
   const [placedOrderDetails, setPlacedOrderDetails] = useState<any>(null);
   const [invoicePrinted, setInvoicePrinted] = useState(false);
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
 
   const subtotal = useMemo(() => {
     return cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
@@ -81,6 +82,7 @@ export default function CheckoutModal({ isOpen, onClose, onOrderCompleted }: Che
     onClose();
     setStep(1);
     setPlacedOrderDetails(null);
+    setShowEmailPreview(false);
   };
 
   if (!isOpen) return null;
@@ -356,6 +358,95 @@ export default function CheckoutModal({ isOpen, onClose, onOrderCompleted }: Che
                   REF: {placedOrderDetails.id}
                 </div>
               </div>
+
+              {/* Simulated Email Notification details */}
+              <div className="bg-emerald-50/70 border border-emerald-200/90 p-4 text-left max-w-md mx-auto space-y-3 relative overflow-hidden" id="email-simulation-banner">
+                {/* Visual live dot to make it look premium and real-time */}
+                <span className="absolute top-2.5 right-2.5 flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                
+                <div className="flex gap-2.5">
+                  <span className="text-lg">✉️</span>
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-800 block">Simulated Email Transmitted</span>
+                    <p className="text-emerald-950 font-sans text-[11px] leading-relaxed">
+                      A "Thank You" receipt dispatch was generated and successfully pushed to: <strong className="font-mono text-[10px] text-[#C1121F] bg-white border border-stone-200/60 px-1 py-0.5 rounded-xs">{placedOrderDetails.customerEmail}</strong>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-emerald-200/50 flex justify-between items-center text-[9px]">
+                  <span className="font-mono uppercase text-emerald-700/70 font-bold">Simulator Server: ACTIVE</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmailPreview(!showEmailPreview)}
+                    className="px-2.5 py-1 bg-emerald-800 hover:bg-emerald-900 text-stone-100 font-mono text-[9px] font-bold uppercase tracking-wider rounded-none cursor-pointer border-none transition-colors"
+                  >
+                    {showEmailPreview ? "Hide Email Preview ▲" : "Inspect Sent Envelope ▼"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Expandable Simulated Email Box */}
+              {showEmailPreview && (
+                <div className="text-left border-2 border-dashed border-stone-250 bg-[#FAF9F6] p-5 max-w-md mx-auto space-y-3.5 animate-in slide-in-from-top-2 duration-300 text-editorial-charcoal shadow-sm" id="email-inbox-preview">
+                  <div className="border-b border-stone-200/60 pb-2.5 space-y-1 text-[11px]">
+                    <div className="flex justify-between">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-stone-400 font-bold">To:</span>
+                      <span className="text-stone-800 font-sans font-semibold">{placedOrderDetails.customerName} &lt;{placedOrderDetails.customerEmail}&gt;</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-stone-400 font-bold">From:</span>
+                      <span className="text-stone-600 font-sans">Pickle &amp; Pepper Co. Curation Labs &lt;consignments@picklepepper.co&gt;</span>
+                    </div>
+                    <div className="flex justify-between font-bold text-stone-900 border-t border-stone-200/40 pt-1.5 leading-snug">
+                      <span className="font-mono text-[9px] uppercase tracking-wider text-stone-400 font-bold">Subject:</span>
+                      <span className="font-serif italic text-[#C1121F]">Thank you for your preservation order! [Invoice #{placedOrderDetails.id}]</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-4 border border-stone-200/60 rounded-xs space-y-3 font-sans text-stone-700 text-xs leading-relaxed">
+                    <div className="flex justify-between items-center border-b border-orange-200 pb-2">
+                      <span className="text-[#C1121F] text-[9px] font-mono tracking-widest uppercase font-bold">🏺 ESTD 1892 • DISPATCH CONFIRMED</span>
+                      <span className="text-stone-400 text-[8px] font-mono">#GAZETTE-{placedOrderDetails.id}</span>
+                    </div>
+                    <h4 className="font-serif text-sm font-bold italic text-editorial-charcoal">Dear {placedOrderDetails.customerName},</h4>
+                    <p>
+                      We are writing to express our sincere appreciation for your recent purchase. Your consignment order has been registered inside our regional state database, and your small-batch, lacto-fermented specimens are currently being processed.
+                    </p>
+
+                    <div className="border-y border-stone-200/60 py-2.5 space-y-1 text-[11px]">
+                      <span className="font-mono font-bold uppercase text-[9px] tracking-wider text-stone-400 block mb-1">Receipt Manifest:</span>
+                      {placedOrderDetails.items.map((it: any, i: number) => (
+                        <div key={i} className="flex justify-between">
+                          <span>{it.productName} (x{it.quantity})</span>
+                          <span className="font-mono font-bold">${(it.price * it.quantity).toFixed(2)}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between font-bold text-editorial-red text-xs border-t border-dashed border-[#de6565]/20 pt-1.5 mt-1.5">
+                        <span>Total Paid Amount:</span>
+                        <span className="font-mono">${placedOrderDetails.total.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-stone-500">
+                      Our preservation curators are diligently packing these canisters with biodegradable materials. An insulated freight container is scheduled to depart soon. Expected transit block is 3-4 solar days.
+                    </p>
+
+                    <div className="text-center pt-2 border-t border-stone-100">
+                      <span className="text-[8px] font-mono text-stone-400 tracking-widest uppercase block">Pickle &amp; Pepper Co. • Artisan Alley Block A</span>
+                    </div>
+                  </div>
+
+                  <div className="text-center">
+                    <span className="text-[8.5px] font-mono font-bold text-stone-400 bg-stone-200/30 px-2 py-0.5 rounded-xs select-none uppercase tracking-wider">
+                      🔒 Secured Sandbox Email Notification system
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Printable Invoice Block */}
               <div className="bg-white border border-editorial-charcoal/25 rounded-none p-5 text-left text-xs font-sans space-y-4 max-w-md mx-auto shadow-sm">
