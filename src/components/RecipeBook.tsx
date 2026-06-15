@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useApp } from "../context/AppContext";
 import { Recipe, Product } from "../types";
-import { Search, Flame, Clock, Award, CheckCircle2, ShoppingCart, ArrowLeft, ArrowRight, User, Plus, Check, X, Printer, Star } from "lucide-react";
+import { Search, Flame, Clock, Award, CheckCircle2, ShoppingCart, ArrowLeft, ArrowRight, User, Plus, Check, X, Printer, Star, Atom, Calculator, MessageSquare, Send, HelpCircle, Sparkles } from "lucide-react";
 
 interface RecipeBookProps {
   onSetTab: (tab: string) => void;
@@ -29,6 +29,62 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
 
   // Simulated premium data fetching loading state
   const [isLoading, setIsLoading] = useState(true);
+
+  // Fermentation Science Lab & AI Advisor state variables
+  const [isLabOpen, setIsLabOpen] = useState(false);
+  const [vegWeight, setVegWeight] = useState<number>(1000); // grams
+  const [waterVolume, setWaterVolume] = useState<number>(1000); // ml
+  const [salinityTarget, setSalinityTarget] = useState<number>(3.0); // % percentage
+  const [vegType, setVegType] = useState<"cucumber" | "pepper" | "cabbage" | "other">("cucumber");
+  
+  const [chatLog, setChatLog] = useState<Array<{ role: "user" | "model"; text: string }>>([
+    {
+      role: "model",
+      text: "Greetings, fellow fermenter! I am **The Brine Master**, your AI guide to exquisite lacto-fermentation. Adjust the salinity slider to examine salt grain values, or ask me anything about yeasts, soft textures, oak leaves, container seals, or spice indices below!"
+    }
+  ]);
+  const [chatInput, setChatInput] = useState("");
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
+  const handleSendChat = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!chatInput.trim() || isChatLoading) return;
+
+    const userMsg = chatInput;
+    setChatInput("");
+    
+    // Add user message to log
+    const updatedLog = [...chatLog, { role: "user" as const, text: userMsg }];
+    setChatLog(updatedLog);
+    setIsChatLoading(true);
+
+    try {
+      // Send chat log to express backend endpoint `/api/gemini/advisor`
+      const res = await fetch("/api/gemini/advisor", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMsg,
+          previousMessages: updatedLog.slice(0, -1) // pass historical frames
+        }),
+      });
+
+      const data = await res.json();
+      
+      setChatLog(prev => [...prev, { role: "model" as const, text: data.reply }]);
+    } catch (err: any) {
+      console.error(err);
+      setChatLog(prev => [
+        ...prev,
+        { 
+          role: "model" as const, 
+          text: "❗ *Brine connection timeout.* The Brine Master is slightly delayed. Please make sure that your **Express Server is active** or check your secrets panels." 
+        }
+      ]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
 
   React.useEffect(() => {
     setIsLoading(true);
@@ -514,6 +570,424 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
           
         </div>
       </>
+      ) : isLabOpen ? (
+        /* 3. INTERACTIVE FERMENTATION SCIENCE LAB & AI ADVISOR VIEW */
+        <div className="space-y-8 text-left animate-in fade-in duration-200" id="science-lab-view">
+          
+          {/* Lab Header block with back action button */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-editorial-charcoal pb-4">
+            <div>
+              <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-600 flex items-center gap-1">
+                <Atom className="w-3.5 h-3.5 animate-spin-slow text-amber-500" />
+                <span>Fermentation Science Desk</span>
+              </span>
+              <h2 className="font-serif text-3xl font-bold text-editorial-charcoal italic mt-0.5">
+                The Lacto-Fermentation Science Lab
+              </h2>
+              <p className="text-[#1A1A1A]/70 text-xs sm:text-sm mt-1 max-w-xl font-sans">
+                Calibrate custom salinity curves, calculate precise salt mass weight, and consult **The Brine Master AI Advisor** for troubleshooting.
+              </p>
+            </div>
+            
+            <button
+              id="close-lab-btn"
+              onClick={() => setIsLabOpen(false)}
+              className="px-4 py-2 text-[10px] font-mono uppercase tracking-widest font-bold text-editorial-charcoal bg-editorial-gray hover:bg-white border border-editorial-charcoal/15 hover:border-editorial-charcoal transition-all rounded-none cursor-pointer"
+            >
+              ← Close &amp; Return to Recipes
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            
+            {/* COLUMN 1: INTERACTIVE CALIBRATOR & CROCK SIMULATOR */}
+            <div className="lg:col-span-7 bg-white border border-editorial-charcoal/15 p-6 space-y-6 text-left">
+              <div className="flex items-center gap-2 border-b border-editorial-charcoal/10 pb-3">
+                <Calculator className="w-4 h-4 text-editorial-red" />
+                <h3 className="font-serif text-base font-black italic text-editorial-charcoal">Salinity Calibration Engine</h3>
+              </div>
+
+              {/* Presets and Inputs */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[9px] font-mono font-bold text-editorial-charcoal/60 uppercase block mb-1">
+                      Vegetable Specimen Mass (g)
+                    </label>
+                    <input
+                      type="number"
+                      value={vegWeight}
+                      onChange={(e) => setVegWeight(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full bg-editorial-gray border border-editorial-charcoal/20 px-3 py-2 text-xs font-mono rounded-none"
+                    />
+                    <div className="flex mt-1.5 gap-1.5 overflow-x-auto pb-1">
+                      {[
+                        { label: "1 Small Jar (500g)", val: 500 },
+                        { label: "Standard Crock (1.5kg)", val: 1500 },
+                        { label: "Bulk Vat (5kg)", val: 5000 }
+                      ].map((p, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setVegWeight(p.val)}
+                          className="px-2 py-0.5 bg-stone-100 text-[8px] font-mono hover:bg-stone-200 border border-stone-300/40 rounded-none shrink-0"
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-mono font-bold text-editorial-charcoal/60 uppercase block mb-1">
+                      Pure Water / Solvent Volume (ml)
+                    </label>
+                    <input
+                      type="number"
+                      value={waterVolume}
+                      onChange={(e) => setWaterVolume(Math.max(0, parseInt(e.target.value) || 0))}
+                      className="w-full bg-editorial-gray border border-editorial-charcoal/20 px-3 py-2 text-xs font-mono rounded-none"
+                    />
+                    <div className="flex mt-1.5 gap-1.5 overflow-x-auto pb-1">
+                      {[
+                        { label: "1 Pint (473ml)", val: 470 },
+                        { label: "1 Quart (946ml)", val: 940 },
+                        { label: "Half Gallon (1.89L)", val: 1890 }
+                      ].map((p, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setWaterVolume(p.val)}
+                          className="px-2 py-0.5 bg-stone-100 text-[8px] font-mono hover:bg-stone-200 border border-stone-300/40 rounded-none shrink-0"
+                        >
+                          {p.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+                  <div>
+                    <label className="text-[9px] font-mono font-bold text-editorial-charcoal/60 uppercase block mb-1 font-bold">
+                      Specimen Category
+                    </label>
+                    <select
+                      value={vegType}
+                      onChange={(e) => setVegType(e.target.value as any)}
+                      className="w-full bg-white border border-editorial-charcoal/20 px-3 py-2 text-xs font-sans rounded-none"
+                    >
+                      <option value="cucumber">Crisp Cucumbers (Half/Full Sour)</option>
+                      <option value="pepper">Hot Chili Mash / Whole Peppers</option>
+                      <option value="cabbage">Sauerkraut Cabbage (Dry Salted)</option>
+                      <option value="other">Tuber Roots, Shrubs &amp; Others</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-mono font-bold text-editorial-charcoal/60 uppercase block mb-1 font-bold">
+                      Desired Salinity Curve: <span className="text-editorial-red font-mono">{salinityTarget.toFixed(1)}%</span>
+                    </label>
+                    <input
+                      type="range"
+                      min="1.0"
+                      max="6.0"
+                      step="0.1"
+                      value={salinityTarget}
+                      onChange={(e) => setSalinityTarget(parseFloat(e.target.value))}
+                      className="w-full h-1 bg-stone-200 rounded-none appearance-none cursor-pointer accent-[#C1121F] mt-2.5"
+                    />
+                    <div className="flex justify-between text-[8px] font-mono text-stone-400 mt-1">
+                      <span>1.0% (Ultra-Mild)</span>
+                      <span>3.0% (Balanced)</span>
+                      <span>6.0% (Extreme)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Dynamic Calculations Readout */}
+              {(() => {
+                const totalGramsMass = Math.round((vegWeight + waterVolume) * (salinityTarget / 100) * 10) / 10;
+                const waterOnlyGrams = Math.round(waterVolume * (salinityTarget / 100) * 10) / 10;
+                
+                // Conversions
+                const totalTsp = Math.round((totalGramsMass / 4.8) * 10) / 10;
+                const totalTsb = Math.round((totalGramsMass / 14.4) * 10) / 10;
+                
+                const waterOnlyTsp = Math.round((waterOnlyGrams / 4.8) * 10) / 10;
+                const waterOnlyTsb = Math.round((waterOnlyGrams / 14.4) * 10) / 10;
+
+                // Salinity Warning Level / Colors
+                let alertColor = "text-emerald-700 bg-emerald-50 border-emerald-200";
+                let alertTitle = "🟢 Optimal Salinity Range";
+                let alertMsg = "Lactic acid bacteria thrives safely! Optimal pathogen suppression and texture retention.";
+                let waterTint = "bg-emerald-500/10 border-emerald-400/30";
+                let bubblesActive = true;
+
+                if (salinityTarget < 2.0) {
+                  alertColor = "text-[#C1121F] bg-[#C1121F]/5 border-[#C1121F]/15 animate-pulse";
+                  alertTitle = "⚠️ Mold Danger Zone";
+                  alertMsg = "Pathogen suppression is too weak. High vulnerability to soft texture and noxious mold colonies!";
+                  waterTint = "bg-amber-600/15 border-amber-500/25";
+                } else if (salinityTarget > 4.5) {
+                  alertColor = "text-amber-800 bg-amber-50 border-amber-200";
+                  alertTitle = "⚠️ Stuck Fermentation Zone";
+                  alertMsg = "Extreme salinity limits lactic bacteria activity. Bubbling slows, and vegetables taste aggressively salty.";
+                  waterTint = "bg-sky-500/10 border-sky-400/30";
+                  bubblesActive = false;
+                }
+
+                // Vegetable specific recommendations
+                let crispTip = "";
+                if (vegType === "cucumber") {
+                  crispTip = "💡 Cucumber Secret: Toss in a clean grape leaf or oak leaf! The natural organic tannins keep the cucumber cell walls crisp and snapping.";
+                } else if (vegType === "pepper") {
+                  crispTip = "💡 Hot Chiles Tip: Always keep peppers entirely submerged below the brine line. Floating parts have an 85% mold accumulation rate.";
+                } else if (vegType === "cabbage") {
+                  crispTip = "💡 Cabbage Secret: Use dry salting! Shred cabbage directly, massage with salt for 10 minutes until heavy pools of natural juices emerge.";
+                } else {
+                  crispTip = "💡 Custom Crop Secret: Ensure a sterile jar, and keep the temperature around 68-72°F (20-22°C) for clean lactobacillus strains.";
+                }
+
+                return (
+                  <div className="space-y-4">
+                    {/* Diagnosis Panel */}
+                    <div className={`p-4 border ${alertColor} text-left space-y-1`}>
+                      <span className="text-xs font-mono uppercase font-black tracking-wider block">{alertTitle}</span>
+                      <p className="text-[11px] leading-relaxed font-sans">{alertMsg}</p>
+                    </div>
+
+                    {/* Math results cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Formula 1: True Lacto (Total mass) */}
+                      <div className="border border-editorial-charcoal/15 p-4 space-y-2 bg-[#FAF9F6]">
+                        <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 font-bold block">METHOD I: PURE LACTO-FERMENT</span>
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-2xl font-serif font-bold text-editorial-charcoal italic">{totalGramsMass}g</span>
+                          <span className="text-[10px] font-mono text-stone-400 font-bold">Total Salt Mass</span>
+                        </div>
+                        <p className="text-[10px] text-stone-500 font-sans leading-relaxed">
+                          Salt ratio applied to both veggies + water volume together. Ideal for traditional crock jars.
+                        </p>
+                        <div className="flex justify-between items-center text-[10px] bg-white px-2 py-1.5 border border-stone-200/80 font-mono text-xs mt-1.5">
+                          <span>Volume Equivalents:</span>
+                          <span className="font-extrabold text-editorial-red">~{totalTsp} tsp / ~{totalTsb} tbsp</span>
+                        </div>
+                      </div>
+
+                      {/* Formula 2: Brine Volume only */}
+                      <div className="border border-editorial-charcoal/15 p-4 space-y-2 bg-[#FAF9F6]">
+                        <span className="text-[9px] font-mono uppercase tracking-widest text-stone-500 font-bold block">METHOD II: WATER BRINE ONLY</span>
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-2xl font-serif font-bold text-editorial-charcoal italic">{waterOnlyGrams}g</span>
+                          <span className="text-[10px] font-mono text-stone-400 font-bold">Brine Liquid Salt</span>
+                        </div>
+                        <p className="text-[10px] text-stone-500 font-sans leading-relaxed">
+                          Salt ratio applied purely to water body. Recommended for quick mason jar canning.
+                        </p>
+                        <div className="flex justify-between items-center text-[10px] bg-white px-2 py-1.5 border border-stone-200/80 font-mono text-xs mt-1.5">
+                          <span>Volume Equivalents:</span>
+                          <span className="font-extrabold text-editorial-red">~{waterOnlyTsp} tsp / ~{waterOnlyTsb} tbsp</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Secret crisp tip block */}
+                    <div className="bg-editorial-gray p-3.5 border-l-4 border-amber-505 text-left text-[11px] italic font-sans text-[#1A1A1A]/90 mt-2">
+                      {crispTip}
+                    </div>
+
+                    {/* GORGEOUS VISUAL CROCK PORTRAYAL */}
+                    <div className="border border-editorial-charcoal/15 bg-stone-50 p-6 flex flex-col items-center justify-center space-y-4 relative overflow-hidden min-h-[300px]" id="visual-crock-simulator">
+                      <span className="text-[8.5px] font-mono text-stone-400 font-bold uppercase tracking-widest absolute top-4">Interactive Bubbling Specimen Test Tube</span>
+
+                      <div className="relative w-40 h-56 bg-white/70 border-4 border-stone-700 shadow-xl rounded-b-3xl rounded-t-lg overflow-hidden flex flex-col justify-end mt-4">
+                        <div className="absolute top-0 inset-x-0 h-4 bg-stone-700/80 border-b border-stone-600"></div>
+                        <div className={`absolute inset-x-0 bottom-0 top-10 ${waterTint} transition-all duration-300 flex flex-col justify-end p-2 overflow-hidden`}>
+                          
+                          <div className="flex flex-wrap justify-center gap-2 relative z-10 select-none pb-6">
+                            {vegType === "cucumber" && (
+                              <>
+                                <div className="w-10 h-10 rounded-full border border-emerald-800/25 bg-emerald-600/30 flex items-center justify-center text-lg animate-bounce duration-1000">🥒</div>
+                                <div className="w-10 h-10 rounded-full border border-emerald-800/25 bg-emerald-600/30 flex items-center justify-center text-lg animate-bounce duration-800 delay-100">🥒</div>
+                                <div className="w-9 h-9 rounded-full border border-emerald-800/25 bg-emerald-600/30 flex items-center justify-center text-lg animate-bounce duration-1200 delay-200">🥒</div>
+                              </>
+                            )}
+                            {vegType === "pepper" && (
+                              <>
+                                <div className="w-10 h-10 rounded-full border border-red-800/25 bg-red-600/30 flex items-center justify-center text-lg animate-bounce duration-1000">🌶️</div>
+                                <div className="w-10 h-10 rounded-full border border-orange-800/25 bg-orange-600/30 flex items-center justify-center text-lg animate-bounce duration-800 delay-100">🌶️</div>
+                                <div className="w-9 h-9 rounded-full border border-amber-800/25 bg-amber-600/30 flex items-center justify-center text-lg animate-bounce duration-1200 delay-200">🌶️</div>
+                              </>
+                            )}
+                            {vegType === "cabbage" && (
+                              <>
+                                <div className="w-10 h-10 rounded-full border border-green-800/25 bg-green-600/20 flex items-center justify-center text-lg animate-bounce duration-800">🥬</div>
+                                <div className="w-10 h-10 rounded-full border border-green-800/25 bg-green-600/20 flex items-center justify-center text-lg animate-bounce duration-1200 delay-100">🥬</div>
+                              </>
+                            )}
+                            {vegType === "other" && (
+                              <>
+                                <div className="w-10 h-10 rounded-full border border-amber-800/25 bg-amber-600/30 flex items-center justify-center text-lg animate-bounce">🥕</div>
+                                <div className="w-10 h-10 rounded-full border border-amber-800/25 bg-amber-600/30 flex items-center justify-center text-lg animate-bounce delay-150">🧅</div>
+                              </>
+                            )}
+                          </div>
+
+                          {bubblesActive && (
+                            <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                              {[1, 2, 3, 4, 5, 6, 7].map((b) => (
+                                <div
+                                  key={b}
+                                  className="absolute w-2 h-2 rounded-full bg-white/70 animate-bounce"
+                                  style={{
+                                    bottom: "10px",
+                                    left: `${b * 12 + 6}%`,
+                                    animationDelay: `${b * 0.15}s`,
+                                    animationDuration: `${0.8 + (b * 0.2) % 1.0}s`
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="absolute right-2 top-10 bottom-4 flex flex-col justify-between text-[7px] font-mono text-stone-500 font-extrabold select-none pointer-events-none">
+                          <span>MAX —</span>
+                          <span>750ml —</span>
+                          <span>500ml —</span>
+                          <span>250ml —</span>
+                          <span>MIN —</span>
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-stone-500 bg-stone-200/60 px-2.5 py-1">
+                        Crock Salinity: {salinityTarget.toFixed(1)}% ({bubblesActive ? "Bubbling Active" : "No Bubbles"})
+                      </span>
+                    </div>
+
+                  </div>
+                );
+              })()}
+
+            </div>
+
+            {/* COLUMN 2: THE BRINE MASTER AI GURU CHAT */}
+            <div className="lg:col-span-5 bg-white border border-editorial-charcoal/15 flex flex-col justify-between min-h-[600px] rounded-none overflow-hidden" id="advisor-chat-portal">
+              
+              <div className="p-4 bg-editorial-charcoal text-editorial-cream border-b border-stone-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+                  <div>
+                    <h4 className="font-serif text-sm font-bold text-white italic leading-tight">The Brine Master Guru</h4>
+                    <span className="text-[8px] font-mono font-bold text-amber-400 uppercase tracking-widest block">Lacto-Ferment Professional Advisor</span>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    setChatLog([
+                      {
+                        role: "model",
+                        text: "Logs purged. Restating index! Greetings fellow seeker. How may I guide your lacto-fermentation ratios or crisp targets today?"
+                      }
+                    ]);
+                  }}
+                  className="text-stone-400 hover:text-white text-[9px] font-mono uppercase tracking-widest border border-stone-800 hover:border-stone-500 px-2 py-1 rounded-none transition-all cursor-pointer"
+                >
+                  Purge Logs
+                </button>
+              </div>
+
+              {/* Chat output scrolling panel */}
+              <div className="p-4 grow overflow-y-auto max-h-[420px] min-h-[380px] bg-[#FAF9F6] space-y-4">
+                {chatLog.map((c, i) => (
+                  <div
+                    key={i}
+                    className={`flex ${c.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in duration-150`}
+                  >
+                    <div
+                      className={`max-w-[85%] p-3.5 border ${
+                        c.role === "user"
+                          ? "bg-editorial-charcoal text-white border-editorial-charcoal rounded-none rounded-tl-lg"
+                          : "bg-white text-editorial-charcoal border-stone-200/90 rounded-none rounded-tr-lg"
+                      } text-xs leading-relaxed space-y-1`}
+                    >
+                      <span className="text-[8px] font-mono uppercase tracking-widest block font-bold text-stone-400">
+                        {c.role === "user" ? "YOU / CULINARIAN" : "THE BRINE MASTER"}
+                      </span>
+                      <p className="whitespace-pre-wrap font-sans">
+                        {c.text}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+
+                {isChatLoading && (
+                  <div className="flex justify-start animate-pulse">
+                    <div className="bg-white text-editorial-charcoal border border-stone-200 p-3 max-w-[80%] rounded-none rounded-tr-lg">
+                      <span className="text-[8px] font-mono uppercase tracking-widest block font-bold text-stone-400">THE BRINE MASTER</span>
+                      <div className="flex items-center gap-1.5 py-1.5">
+                        <div className="w-1.5 h-1.5 bg-editorial-charcoal rounded-full animate-bounce"></div>
+                        <div className="w-1.5 h-1.5 bg-editorial-charcoal rounded-full animate-bounce [animation-delay:0.1s]"></div>
+                        <div className="w-1.5 h-1.5 bg-editorial-charcoal rounded-full animate-bounce [animation-delay:0.2s]"></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat controls & Quick Ask suggestions */}
+              <div className="p-4 border-t border-stone-100 bg-white space-y-3">
+                <div className="space-y-1">
+                  <span className="text-[8px] font-mono uppercase tracking-wider text-stone-400 block font-bold">Frequently Consulted Topics:</span>
+                  <div className="flex flex-wrap gap-1">
+                    {[
+                      "Crisp pickle guidelines",
+                      "Kahm yeast vs bad mold",
+                      "Ideal chili mash salinity",
+                      "Sterilization safety metrics"
+                    ].map((topic, tIdx) => (
+                      <button
+                        key={tIdx}
+                        type="button"
+                        onClick={() => {
+                          setChatInput(`Explain details regarding: ${topic}`);
+                        }}
+                        disabled={isChatLoading}
+                        className="px-2 py-1 bg-stone-100 hover:bg-stone-200 text-editorial-charcoal text-[9px] font-mono hover:text-[#C1121F] border border-stone-300/40 transition-colors rounded-none text-left shrink-0 truncate max-w-[200px]"
+                      >
+                        {topic}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <form onSubmit={handleSendChat} className="flex gap-2 pt-1">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask standard brining issues..."
+                    disabled={isChatLoading}
+                    className="grow border border-stone-200 px-3 py-2 text-xs focus:outline-none focus:border-editorial-charcoal rounded-none disabled:opacity-50 font-sans"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isChatLoading || !chatInput.trim()}
+                    className="p-2.5 bg-[#C1121F] text-white hover:bg-editorial-charcoal transition-all rounded-none disabled:opacity-40 cursor-pointer flex items-center justify-center aspect-square"
+                    title="Send Fermentation Inquiry"
+                  >
+                    <Send className="w-4 h-4 text-white" />
+                  </button>
+                </form>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
       ) : (
         /* 2. RECIPES LIST SEARCH BOARD */
         <div className="space-y-8 text-left animate-in fade-in duration-200">
@@ -527,6 +1001,27 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
             <p className="text-[#1A1A1A]/70 text-xs sm:text-sm font-sans leading-relaxed">
               Browse professional masterguides covering canning, dry-fermentation, brining, heat scaling, and wood-smoking techniques from independent growers.
             </p>
+          </div>
+
+          {/* Prominent Science Lab Banner */}
+          <div className="bg-gradient-to-r from-editorial-charcoal to-stone-900 text-editorial-cream p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-6 border border-stone-800" id="science-lab-banner">
+            <div className="space-y-2 text-left md:max-w-xl">
+              <div className="flex items-center gap-2">
+                <Atom className="w-5 h-5 text-amber-500 animate-spin-slow" />
+                <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-amber-500">Fermentation Science Desk</span>
+              </div>
+              <h3 className="font-serif text-2xl font-bold italic text-white mt-1">Lacto-Fermentation Science Lab</h3>
+              <p className="text-stone-300 text-xs sm:text-sm font-sans leading-relaxed">
+                Unlock our interactive brine salinity calculator, visual micro-bubbling crock simulator, and secure chat with **The Brine Master AI Guru** to ensure sterile, crispy, award-winning jars!
+              </p>
+            </div>
+            <button
+              id="open-lab-btn"
+              onClick={() => setIsLabOpen(true)}
+              className="px-6 py-3 bg-[#C1121F] text-[#FAF9F6] text-xs font-mono font-bold uppercase tracking-wider rounded-none hover:bg-white hover:text-black hover:border-editorial-charcoal transition-all font-bold shrink-0 shadow-lg cursor-pointer"
+            >
+              🚀 Launch Science Lab &amp; AI Advisor
+            </button>
           </div>
 
           {/* Trending Now Highlight Section */}

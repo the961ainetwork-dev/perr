@@ -62,6 +62,65 @@ export default function AdminZone() {
   );
   const [newsletterPreviewDevice, setNewsletterPreviewDevice] = useState<"desktop" | "mobile">("desktop");
   const [newsletterAudience, setNewsletterAudience] = useState<"both" | "pickle" | "pepper">("both");
+  const [newsletterTemplate, setNewsletterTemplate] = useState<"minimalist" | "farmhouse" | "spicy">("minimalist");
+
+  // layout template visual properties configuration
+  const templateConfig = useMemo(() => {
+    switch (newsletterTemplate) {
+      case "farmhouse":
+        return {
+          wrapperClass: "bg-[#FAF9F6] border-x border-b border-stone-300 p-6 space-y-8 select-none font-sans text-[#2A2421] transition-all duration-300",
+          headerBorderClass: "border-b-2 border-emerald-800 pb-4 text-center space-y-2",
+          headerTitleClass: "font-serif text-3xl font-bold italic tracking-tight text-emerald-950",
+          accentTextClass: "text-[#1B4D3E] font-serif italic text-[11px] block font-bold tracking-widest",
+          featuredRecipeBg: "border-2 border-emerald-800/20 bg-[#F4F1EA] p-5 space-y-4 text-left rounded-lg",
+          recipeAccentLabel: "text-[9px] font-mono uppercase text-emerald-800 tracking-wider block font-bold",
+          recipeButton: "w-full py-2 bg-emerald-800 hover:bg-emerald-900 text-amber-50 font-mono text-[9px] tracking-widest font-bold uppercase text-center cursor-pointer rounded-none block border-none transition-all",
+          productCardClass: "bg-[#F4F1EA] border border-[#1B4D3E]/20 p-4 text-left flex flex-col sm:flex-row gap-4 items-center rounded-lg",
+          productAccentLabel: "text-[9px] font-mono uppercase text-[#1B4D3E] tracking-widest block font-bold",
+          productButton: "w-full py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-mono text-[9px] tracking-widest font-black uppercase text-center cursor-pointer rounded-b-lg block border-t-0 transition-all",
+          triviaBg: "p-4 bg-amber-50/35 border border-amber-200/50 text-left text-xs font-sans space-y-2 rounded-lg text-amber-950",
+          triviaTitleClass: "font-serif font-extrabold italic text-emerald-950",
+          footerLinkClass: "text-emerald-800 hover:underline cursor-pointer",
+          accentBorderColor: "border-stone-300"
+        };
+      case "spicy":
+        return {
+          wrapperClass: "bg-stone-950 border-x border-b border-red-950/45 p-6 space-y-8 select-none font-sans text-stone-100 transition-all duration-300",
+          headerBorderClass: "border-b-4 border-red-600 pb-4 text-center space-y-2 bg-gradient-to-r from-red-950 to-orange-950 p-4 -mx-6 -mt-6 border-t-4 border-t-red-500",
+          headerTitleClass: "font-mono text-2xl font-black uppercase tracking-wider text-red-500 italic",
+          accentTextClass: "text-orange-500 font-mono tracking-[0.2em] font-bold block uppercase text-[10px]",
+          featuredRecipeBg: "border border-red-900 bg-red-950/20 p-5 space-y-4 text-left",
+          recipeAccentLabel: "text-[9px] font-mono uppercase text-red-500 tracking-widest block font-black",
+          recipeButton: "w-full py-2 bg-red-600 hover:bg-red-700 text-stone-100 font-mono text-[9px] tracking-widest font-bold uppercase text-center cursor-pointer rounded-none block border-none transition-all",
+          productCardClass: "bg-stone-900 border border-red-900/40 p-4 text-left flex flex-col sm:flex-row gap-4 items-center",
+          productAccentLabel: "text-[9px] font-mono uppercase text-red-500 tracking-widest block font-black",
+          productButton: "w-full py-2.5 bg-orange-600 hover:bg-orange-700 text-white font-mono text-[10px] tracking-widest font-black uppercase text-center cursor-pointer rounded-none block border-t-0 transition-all",
+          triviaBg: "p-4 bg-red-950/30 border border-red-900/50 text-left text-xs font-sans space-y-2 text-stone-300",
+          triviaTitleClass: "font-serif font-black italic text-red-400",
+          footerLinkClass: "text-red-500 hover:underline cursor-pointer",
+          accentBorderColor: "border-red-900"
+        };
+      case "minimalist":
+      default:
+        return {
+          wrapperClass: "bg-white border-x border-b border-stone-250 p-6 space-y-8 select-none font-sans text-editorial-charcoal transition-all duration-300",
+          headerBorderClass: "border-b-4 border-editorial-charcoal pb-4 text-center space-y-1",
+          headerTitleClass: "font-serif text-2xl font-black italic tracking-tight text-editorial-charcoal",
+          accentTextClass: "text-[9px] font-mono tracking-[0.2em] text-[#C1121F] font-bold block uppercase",
+          featuredRecipeBg: "border border-stone-200 bg-stone-50/50 p-4 space-y-4 text-left",
+          recipeAccentLabel: "text-[9px] font-mono uppercase text-[#C1121F] tracking-widest block font-bold",
+          recipeButton: "w-full py-2 bg-editorial-charcoal hover:bg-neutral-800 text-[#FAF9F6] font-mono text-[9px] tracking-widest font-bold uppercase text-center cursor-pointer rounded-none border border-transparent block transition-all",
+          productCardClass: "bg-[#FAF9F6] border border-editorial-charcoal/15 p-4 text-left flex flex-col sm:flex-row gap-4 items-center",
+          productAccentLabel: "text-[9px] font-mono uppercase text-amber-600 tracking-widest block font-bold",
+          productButton: "w-full py-2 bg-[#C1121F] hover:bg-red-800 text-white font-mono text-[9px] tracking-widest font-black uppercase text-center cursor-pointer rounded-none block border-t-0 transition-all",
+          triviaBg: "p-4 bg-stone-100/40 border border-stone-200 text-left text-xs font-sans space-y-2",
+          triviaTitleClass: "font-serif font-bold italic text-stone-800",
+          footerLinkClass: "text-[#C1121F] hover:underline cursor-pointer",
+          accentBorderColor: "border-stone-200"
+        };
+    }
+  }, [newsletterTemplate]);
 
   const activeRecipeForNewsletter = useMemo(() => {
     return recipes.find(r => r.id === selectedNewsletterRecipeId) || recipes[0];
@@ -1008,6 +1067,39 @@ export default function AdminZone() {
               {/* Form Controls */}
               <div className="space-y-4 text-xs">
                 
+                {/* Visual Layout Template Selector */}
+                <div className="space-y-1.5 p-3 bg-stone-50 border border-stone-200">
+                  <label className="text-[10px] font-mono font-bold uppercase text-editorial-charcoal/60 block">
+                    Visual Layout Template
+                  </label>
+                  <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-3">
+                    {[
+                      { id: "minimalist", label: "Modern Minimalist", icon: "▫️", theme: "Monochrome" },
+                      { id: "farmhouse", label: "Rustic Farmhouse", icon: "🌿", theme: "Warm Cozy" },
+                      { id: "spicy", label: "Bold & Spicy", icon: "🌶️", theme: "Hot Fire" }
+                    ].map((tpl) => (
+                      <button
+                        key={tpl.id}
+                        type="button"
+                        onClick={() => setNewsletterTemplate(tpl.id as any)}
+                        className={`px-2.5 py-2 text-left border flex flex-col justify-between transition-all rounded-none cursor-pointer ${
+                          newsletterTemplate === tpl.id
+                            ? "border-editorial-charcoal bg-white ring-2 ring-editorial-charcoal font-bold"
+                            : "border-stone-200 bg-white hover:bg-stone-50 hover:border-editorial-charcoal/40 text-stone-600"
+                        }`}
+                      >
+                        <span className="text-[10px] font-serif font-bold flex items-center gap-1">
+                          <span>{tpl.icon}</span>
+                          <span>{tpl.label}</span>
+                        </span>
+                        <span className="text-[8px] font-mono uppercase tracking-tight text-stone-400 mt-1">
+                          {tpl.theme}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Subject Line */}
                 <div className="space-y-1">
                   <label className="text-[10px] font-mono font-bold uppercase text-editorial-charcoal/50 block">Subject Headline</label>
@@ -1181,15 +1273,17 @@ export default function AdminZone() {
               </div>
 
               {/* RENDERED EMAIL BODY CONTENT CONTAINER */}
-              <div className="bg-white border-x border-b border-stone-250 p-6 space-y-8 select-none font-sans text-editorial-charcoal">
+              <div className={templateConfig.wrapperClass}>
                 
                 {/* Email Banner brand header */}
-                <div className="border-b-4 border-editorial-charcoal pb-4 text-center space-y-1">
-                  <span className="text-[9px] font-mono tracking-[0.2em] text-[#C1121F] font-bold block uppercase">
-                    ESTD 1892 • CRAFT FERMENT DISPATCHES
+                <div className={templateConfig.headerBorderClass}>
+                  <span className={templateConfig.accentTextClass}>
+                    {newsletterTemplate === "spicy" ? "🔥 COAL-FIRED SPECIES • SPICE LEVELS IN EXCESS 🔥" : "ESTD 1892 • CRAFT FERMENT DISPATCHES"}
                   </span>
-                  <h1 className="font-serif text-2xl font-black italic tracking-tight text-editorial-charcoal">
-                    The Pickle &amp; Pepper Gazette
+                  <h1 className={templateConfig.headerTitleClass}>
+                    {newsletterTemplate === "spicy" 
+                      ? "The Chili Head Firebrand" 
+                      : "The Pickle & Pepper Gazette"}
                   </h1>
                   <div className="flex justify-between items-center text-[8.5px] font-mono text-stone-400 uppercase pt-2 tracking-wider">
                     <span>Issue #34</span>
@@ -1202,45 +1296,47 @@ export default function AdminZone() {
 
                 {/* Introductory editorial section */}
                 <div className="space-y-3.5 text-left leading-relaxed">
-                  <p className="font-serif italic text-base text-editorial-charcoal mb-1">Greetings Brine Aficionado,</p>
-                  <div className="text-stone-700 text-xs sm:text-[13px] leading-relaxed font-sans whitespace-pre-wrap">
+                  <p className={`font-serif italic text-base mb-1 ${newsletterTemplate === 'spicy' ? 'text-red-400 font-extrabold' : newsletterTemplate === 'farmhouse' ? 'text-emerald-950 font-bold' : 'text-editorial-charcoal font-bold'}`}>
+                    {newsletterTemplate === "spicy" ? "Greetings Spice Fanatic," : "Greetings Brine Aficionado,"}
+                  </p>
+                  <div className={`${newsletterTemplate === 'spicy' ? 'text-stone-300' : 'text-stone-700'} text-xs sm:text-[13px] leading-relaxed font-sans whitespace-pre-wrap`}>
                     {newsletterCustomIntro || "Write your dynamic issue introduction column text in the panel on the left..."}
                   </div>
                 </div>
 
                 {/* 1. FEATURED RECIPE SEGMENT (Dynamic database link) */}
                 {activeRecipeForNewsletter ? (
-                  <div className="border border-stone-200 bg-stone-50/50 p-4 space-y-4 text-left">
+                  <div className={templateConfig.featuredRecipeBg}>
                     <div className="space-y-1">
-                      <span className="text-[9px] font-mono uppercase text-[#C1121F] tracking-widest block font-bold">✦ CULINARY MAP OF THE WEEK</span>
-                      <h3 className="font-serif text-base font-bold italic text-editorial-charcoal">
+                      <span className={templateConfig.recipeAccentLabel}>✦ CULINARY MAP OF THE WEEK</span>
+                      <h3 className={`font-serif text-base font-bold italic ${newsletterTemplate === 'spicy' ? 'text-red-400' : newsletterTemplate === 'farmhouse' ? 'text-emerald-950' : 'text-editorial-charcoal'}`}>
                         {activeRecipeForNewsletter.title}
                       </h3>
-                      <p className="text-[11px] text-stone-500 leading-normal">
+                      <p className={`text-[11px] leading-normal ${newsletterTemplate === 'spicy' ? 'text-stone-400' : 'text-stone-600'}`}>
                         {activeRecipeForNewsletter.description}
                       </p>
                     </div>
 
                     {/* Meta bar */}
-                    <div className="grid grid-cols-3 gap-2 py-2 border-y border-stone-200/60 text-center font-mono text-[9px]">
+                    <div className={`grid grid-cols-3 gap-2 py-2 border-y ${newsletterTemplate === 'spicy' ? 'border-red-900/60' : 'border-stone-200/60'} text-center font-mono text-[9px]`}>
                       <div>
                         <span className="block text-stone-400 uppercase">Preptime</span>
-                        <span className="font-bold text-stone-700">{activeRecipeForNewsletter.prepTime}</span>
+                        <span className={`font-bold ${newsletterTemplate === 'spicy' ? 'text-stone-300' : 'text-stone-700'}`}>{activeRecipeForNewsletter.prepTime}</span>
                       </div>
                       <div>
                         <span className="block text-stone-400 uppercase">Cooktime</span>
-                        <span className="font-bold text-stone-700">{activeRecipeForNewsletter.cookTime}</span>
+                        <span className={`font-bold ${newsletterTemplate === 'spicy' ? 'text-stone-300' : 'text-stone-700'}`}>{activeRecipeForNewsletter.cookTime}</span>
                       </div>
                       <div>
                         <span className="block text-stone-400 uppercase">Complexity</span>
-                        <span className="font-bold text-[#C1121F]">{activeRecipeForNewsletter.difficulty}</span>
+                        <span className={`font-bold ${newsletterTemplate === 'spicy' ? 'text-red-500 font-black' : 'text-[#C1121F]'}`}>{activeRecipeForNewsletter.difficulty}</span>
                       </div>
                     </div>
 
                     {/* Link button */}
                     <button
                       type="button"
-                      className="w-full py-2 bg-editorial-charcoal hover:bg-neutral-800 text-[#FAF9F6] font-mono text-[9px] tracking-widest font-bold uppercase text-center cursor-pointer rounded-none border border-transparent block"
+                      className={templateConfig.recipeButton}
                     >
                       DEDUCE CULINARY MAP →
                     </button>
@@ -1254,7 +1350,7 @@ export default function AdminZone() {
                 {/* 2. EXCLUSIVE MICRO-BATCH JAR SPONSORSHIP */}
                 {activeProductForNewsletter ? (
                   <div className="pt-2">
-                    <div className="bg-[#FAF9F6] border border-editorial-charcoal/15 p-4 text-left flex flex-col sm:flex-row gap-4 items-center">
+                    <div className={templateConfig.productCardClass}>
                       <img
                         src={activeProductForNewsletter.image}
                         alt={activeProductForNewsletter.name}
@@ -1262,16 +1358,16 @@ export default function AdminZone() {
                         referrerPolicy="no-referrer"
                       />
                       <div className="space-y-1.5 w-full">
-                        <span className="text-[9px] font-mono uppercase text-amber-600 tracking-widest block font-bold">🚚 FEATURED BATCH ON STREAM</span>
+                        <span className={templateConfig.productAccentLabel}>🚚 FEATURED BATCH ON STREAM</span>
                         <div className="flex items-start justify-between">
-                          <h4 className="font-serif text-sm font-black text-editorial-charcoal italic leading-tight">
+                          <h4 className={`font-serif text-sm font-black italic leading-tight ${newsletterTemplate === 'spicy' ? 'text-red-400' : newsletterTemplate === 'farmhouse' ? 'text-emerald-950' : 'text-editorial-charcoal'}`}>
                             {activeProductForNewsletter.name}
                           </h4>
-                          <span className="font-mono text-xs font-bold text-editorial-red whitespace-nowrap shrink-0 pl-2">
+                          <span className={`font-mono text-xs font-bold whitespace-nowrap shrink-0 pl-2 ${newsletterTemplate === 'spicy' ? 'text-red-400' : 'text-editorial-red'}`}>
                             ${activeProductForNewsletter.price.toFixed(2)}
                           </span>
                         </div>
-                        <p className="text-[11px] text-stone-600 font-sans leading-relaxed line-clamp-2">
+                        <p className={`text-[11px] font-sans leading-relaxed line-clamp-2 ${newsletterTemplate === 'spicy' ? 'text-stone-400' : 'text-stone-600'}`}>
                           {activeProductForNewsletter.description}
                         </p>
                         <div className="text-[9.5px] font-mono text-stone-400 flex items-center justify-between pt-1">
@@ -1283,9 +1379,9 @@ export default function AdminZone() {
 
                     <button
                       type="button"
-                      className="w-full py-2 bg-[#C1121F] hover:bg-red-800 text-white font-mono text-[9px] tracking-widest font-black uppercase text-center cursor-pointer rounded-none block border-t-0"
+                      className={templateConfig.productButton}
                     >
-                      ACQUIRE EXCLUSIVE MICRO-BATCH JAR 📦
+                      ACQUIRE EXCLUSIVE MICRO-BATCH JAR {newsletterTemplate === "spicy" ? "🌶️" : newsletterTemplate === "farmhouse" ? "🌿" : "📦"}
                     </button>
                   </div>
                 ) : (
@@ -1295,27 +1391,31 @@ export default function AdminZone() {
                 )}
 
                 {/* 3. QUICK BRINE TRIVIA COLUMN */}
-                <div className="p-4 bg-stone-100/40 border border-stone-200 text-left text-xs font-sans space-y-2">
-                  <h5 className="font-serif font-bold italic text-stone-800">Farmers Guild Fermenting Rule:</h5>
-                  <p className="text-stone-600 text-[11px] leading-relaxed">
-                    Always maintain sterile, anaerobic (submerged) conditions. Wild yeasts and airborne molds are locked outside when you keep lacto-active brines locked at 70°F water seals.
+                <div className={templateConfig.triviaBg}>
+                  <h5 className={`${templateConfig.triviaTitleClass} text-xs font-mono font-bold`}>
+                    {newsletterTemplate === "spicy" ? "🔥 Scoville Level Notice:" : "Farmers Guild Fermenting Rule:"}
+                  </h5>
+                  <p className={`${newsletterTemplate === 'spicy' ? 'text-stone-300' : 'text-stone-700'} text-[11px] leading-relaxed`}>
+                    {newsletterTemplate === "spicy" 
+                      ? "When handling extreme ghost chili or carolina reaper compounds, prioritize protective sterile gear. Keep caps tight during initial off-gassing to bind natural flavor capsicums!"
+                      : "Always maintain sterile, anaerobic (submerged) conditions. Wild yeasts and airborne molds are locked outside when you keep lacto-active brines locked at 70°F water seals."}
                   </p>
                 </div>
 
                 {/* Footnotes & Regulatory Info */}
-                <div className="border-t border-stone-200 pt-6 text-center space-y-3.5 select-none font-sans text-stone-400 leading-normal">
+                <div className={`border-t ${templateConfig.accentBorderColor} pt-6 text-center space-y-3.5 select-none font-sans text-stone-400 leading-normal`}>
                   <p className="text-[9.5px]">
                     You received this dispatch because you signed up for the weekly newsletter subscription at Pickle &amp; Pepper Co. Curation Labs.
                   </p>
                   <p className="text-[8.5px] font-mono tracking-tight text-stone-400">
                     Crafted with pride in Artisan Alley, Cascadia Fermentations Block A.
                   </p>
-                  <div className="flex justify-center gap-3.5 text-[9px] font-mono text-[#C1121F] font-bold uppercase">
-                    <span className="hover:underline cursor-pointer">Unsubscribe</span>
+                  <div className="flex justify-center gap-3.5 text-[9px] font-mono font-bold uppercase">
+                    <span className={`${templateConfig.footerLinkClass}`}>Unsubscribe</span>
                     <span>•</span>
-                    <span className="hover:underline cursor-pointer">Update Preferences</span>
+                    <span className={`${templateConfig.footerLinkClass}`}>Update Preferences</span>
                     <span>•</span>
-                    <span className="hover:underline cursor-pointer">Farmer Registers</span>
+                    <span className={`${templateConfig.footerLinkClass}`}>Farmer Registers</span>
                   </div>
                 </div>
 
