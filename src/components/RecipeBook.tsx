@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { useApp } from "../context/AppContext";
 import { Recipe, Product } from "../types";
-import { Search, Flame, Clock, Award, CheckCircle2, ShoppingCart, ArrowLeft, ArrowRight, User, Plus, Check, X, Printer, Star, Atom, Calculator, MessageSquare, Send, HelpCircle, Sparkles } from "lucide-react";
+import { Search, Flame, Clock, Award, CheckCircle2, ShoppingCart, ArrowLeft, ArrowRight, User, Plus, Check, X, Printer, Star, Atom, Calculator, MessageSquare, Send, HelpCircle, Sparkles, Heart } from "lucide-react";
 
 interface RecipeBookProps {
   onSetTab: (tab: string) => void;
@@ -26,6 +26,28 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
   const [selectedHeat, setSelectedHeat] = useState<string>("all");
+  
+  // Save to Favorites State (Backed by localStorage)
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem("p_m_recipe_favorites");
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      return [];
+    }
+  });
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
+
+  // Sync favorites with localStorage
+  React.useEffect(() => {
+    localStorage.setItem("p_m_recipe_favorites", JSON.stringify(favorites));
+  }, [favorites]);
+
+  const toggleFavorite = (recipeId: string) => {
+    setFavorites((prev) =>
+      prev.includes(recipeId) ? prev.filter((id) => id !== recipeId) : [...prev, recipeId]
+    );
+  };
 
   // Simulated premium data fetching loading state
   const [isLoading, setIsLoading] = useState(true);
@@ -92,7 +114,7 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
       setIsLoading(false);
     }, 500); // short premium feel transition delay
     return () => clearTimeout(timer);
-  }, [searchQuery, selectedDifficulty, selectedHeat]);
+  }, [searchQuery, selectedDifficulty, selectedHeat, showFavoritesOnly]);
 
   // Sync with prop if navigated from a product link
   React.useEffect(() => {
@@ -137,6 +159,8 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
     return recipes.filter((r) => {
       if (!r.approved) return false; // only approved by admin!
 
+      if (showFavoritesOnly && !favorites.includes(r.id)) return false;
+
       const matchesSearch =
         r.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         r.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -151,7 +175,7 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
 
       return matchesSearch && matchesDifficulty && matchesHeat;
     });
-  }, [recipes, searchQuery, selectedDifficulty, selectedHeat]);
+  }, [recipes, searchQuery, selectedDifficulty, selectedHeat, showFavoritesOnly, favorites]);
 
   // Retrieve current active recipe
   const activeRecipe = useMemo(() => {
@@ -196,16 +220,34 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
               <span>Back to Artisan Guide Catalog</span>
             </button>
 
-            {/* Print Recipe Button */}
-            <button
-              id="print-recipe-btn"
-              onClick={() => window.print()}
-              className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest font-bold text-[#FAF9F6] bg-[#C1121F] hover:bg-editorial-charcoal border border-transparent px-4 py-2.5 transition-all rounded-none cursor-pointer"
-              title="Print clean text-only card of this recipe"
-            >
-              <Printer className="w-3.5 h-3.5 text-[#FAF9F6]" />
-              <span>Print Recipe Card</span>
-            </button>
+            {/* Recipe Tool Suite */}
+            <div className="flex items-center gap-3">
+              {/* Save to Favorites Button */}
+              <button
+                id="toggle-fav-detail-btn"
+                onClick={() => toggleFavorite(activeRecipe.id)}
+                className={`inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest font-bold border px-4 py-2.5 transition-all rounded-none cursor-pointer ${
+                  favorites.includes(activeRecipe.id)
+                    ? "bg-red-50 text-red-600 border-red-300 hover:bg-red-100/80"
+                    : "bg-white text-editorial-charcoal border-editorial-charcoal/15 hover:bg-stone-50"
+                }`}
+                title={favorites.includes(activeRecipe.id) ? "Remove from Favorites" : "Save to Favorites"}
+              >
+                <Heart className={`w-3.5 h-3.5 ${favorites.includes(activeRecipe.id) ? "fill-red-600 text-red-600" : "text-editorial-charcoal/60"}`} />
+                <span>{favorites.includes(activeRecipe.id) ? "Saved in Favorites" : "Save to Favorites"}</span>
+              </button>
+
+              {/* Print Recipe Button */}
+              <button
+                id="print-recipe-btn"
+                onClick={() => window.print()}
+                className="inline-flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest font-bold text-[#FAF9F6] bg-[#C1121F] hover:bg-editorial-charcoal border border-transparent px-4 py-2.5 transition-all rounded-none cursor-pointer"
+                title="Print clean text-only card of this recipe"
+              >
+                <Printer className="w-3.5 h-3.5 text-[#FAF9F6]" />
+                <span>Print Recipe Card</span>
+              </button>
+            </div>
           </div>
 
           {/* Interactive Screen Details wrapper (hidden during browser print) */}
@@ -1045,9 +1087,23 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
                     <div className="space-y-2">
                       <div className="flex justify-between items-center text-[8px] font-mono font-bold tracking-widest uppercase text-editorial-charcoal/40">
                         <span>GUIDE REFERENCE • BATCH-{rec.id}</span>
-                        <span className="flex items-center gap-0.5 text-amber-500 font-extrabold text-[10px]">
-                          ★ {rec.rating?.toFixed(1) || "5.0"}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleFavorite(rec.id);
+                            }}
+                            className="p-1 text-editorial-charcoal/50 hover:text-red-500 hover:scale-110 transition-all cursor-pointer"
+                            title={favorites.includes(rec.id) ? "Remove from Favorites" : "Save to Favorites"}
+                            aria-label={favorites.includes(rec.id) ? "Remove from Favorites" : "Save to Favorites"}
+                          >
+                            <Heart className={`w-3.5 h-3.5 ${favorites.includes(rec.id) ? "fill-red-600 text-red-600" : "text-stone-400"}`} />
+                          </button>
+                          <span className="flex items-center gap-0.5 text-amber-500 font-extrabold text-[10px]">
+                            ★ {rec.rating?.toFixed(1) || "5.0"}
+                          </span>
+                        </div>
                       </div>
                       
                       <h4 className="font-serif text-sm font-black text-editorial-charcoal group-hover:text-editorial-red transition-colors italic leading-snug line-clamp-1">
@@ -1132,6 +1188,24 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
               </select>
             </div>
 
+            {/* Show Favorites Toggle */}
+            <div className="flex items-center gap-2 shrink-0 w-full md:w-auto justify-between md:justify-start">
+              <span className="text-[9px] font-mono font-bold text-editorial-charcoal/60 uppercase tracking-widest">Saved</span>
+              <button
+                type="button"
+                onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                className={`flex items-center gap-1.5 border py-2 px-3.5 text-xs font-bold font-mono uppercase rounded-none transition-all cursor-pointer ${
+                  showFavoritesOnly
+                    ? "bg-red-50 text-red-600 border-red-350 ring-1 ring-red-400 font-extrabold"
+                    : "bg-white text-editorial-charcoal border-editorial-charcoal/20 hover:border-editorial-charcoal/60"
+                }`}
+                title={showFavoritesOnly ? "Show All Recipes" : "Filter to Favorites Only"}
+              >
+                <Heart className={`w-3.5 h-3.5 ${showFavoritesOnly ? "fill-red-600 text-red-600" : "text-stone-400"}`} />
+                <span>Favorites ({favorites.length})</span>
+              </button>
+            </div>
+
           </div>
 
           {/* Recipe Grid listing */}
@@ -1169,8 +1243,16 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
             </div>
           ) : filteredRecipes.length === 0 ? (
             <div className="py-16 bg-[#FAF9F6] border border-dashed border-editorial-charcoal/15 text-center">
-              <Clock className="w-8 h-8 text-editorial-charcoal/20 mx-auto mb-2" />
-              <p className="text-xs text-editorial-charcoal/40 font-mono uppercase tracking-wider">No recipe maps match your criteria.</p>
+              {showFavoritesOnly ? (
+                <Heart className="w-8 h-8 text-red-300 mx-auto mb-2 animate-pulse" />
+              ) : (
+                <Clock className="w-8 h-8 text-editorial-charcoal/20 mx-auto mb-2" />
+              )}
+              <p className="text-xs text-editorial-charcoal/40 font-mono uppercase tracking-wider max-w-md mx-auto leading-relaxed">
+                {showFavoritesOnly 
+                  ? "You have not marked any recipe maps as favorites yet. Explore the catalog and tap the heart icon on any recipe!"
+                  : "No recipe maps match your criteria."}
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -1188,6 +1270,18 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
                       className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500"
                       referrerPolicy="no-referrer"
                     />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(rec.id);
+                      }}
+                      className="absolute top-3 left-3 hover:scale-110 transition-transform p-1.5 rounded-full bg-white/95 backdrop-blur-xs shadow-xs text-editorial-charcoal cursor-pointer flex items-center justify-center border border-editorial-charcoal/10 z-10"
+                      title={favorites.includes(rec.id) ? "Remove from Favorites" : "Save to Favorites"}
+                      aria-label={favorites.includes(rec.id) ? "Remove from Favorites" : "Save to Favorites"}
+                    >
+                      <Heart className={`w-3.5 h-3.5 transition-all ${favorites.includes(rec.id) ? "fill-red-600 text-red-600 animate-pulse" : "text-stone-500 hover:text-red-500"}`} />
+                    </button>
                     <span className="absolute bottom-3 left-3 bg-[#FAF9F6] border border-editorial-charcoal/15 text-editorial-charcoal text-[9px] font-mono font-bold uppercase tracking-wider px-2 py-0.5">
                       ⏱ {rec.prepTime} Prep
                     </span>
