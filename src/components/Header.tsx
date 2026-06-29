@@ -296,7 +296,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
               <div className="absolute left-0 mt-1 w-52 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150 rounded-none text-left">
                 <button
                   onClick={() => { setActiveTab("market"); setMarketOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                  className={`w-full text-left px-4 py-2 text-[12px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
                     activeTab === "market" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
                   }`}
                 >
@@ -305,7 +305,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
                 </button>
                 <button
                   onClick={() => { setActiveTab("showcase"); setMarketOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                  className={`w-full text-left px-4 py-2 text-[12px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
                     activeTab === "showcase" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
                   }`}
                 >
@@ -314,7 +314,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
                 </button>
                 <button
                   onClick={() => { setActiveTab("recipes"); setMarketOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                  className={`w-full text-left px-4 py-2 text-[12px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
                     activeTab === "recipes" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
                   }`}
                 >
@@ -323,7 +323,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
                 </button>
                 <button
                   onClick={() => { setActiveTab("dropship"); setMarketOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                  className={`w-full text-left px-4 py-2 text-[12px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
                     activeTab === "dropship" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
                   }`}
                 >
@@ -360,7 +360,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
               <div className="absolute left-0 mt-1 w-48 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150 rounded-none text-left">
                 <button
                   onClick={() => { setActiveTab("about"); setAboutOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                  className={`w-full text-left px-4 py-2 text-[12px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
                     activeTab === "about" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
                   }`}
                 >
@@ -369,7 +369,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
                 </button>
                 <button
                   onClick={() => { setActiveTab("philosophy"); setAboutOpen(false); }}
-                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                  className={`w-full text-left px-4 py-2 text-[12px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
                     activeTab === "philosophy" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
                   }`}
                 >
@@ -430,7 +430,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
               {mobileMarketOpen && (
                 <>
                   <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setMobileMarketOpen(false)} />
-                  <div className="absolute left-0 mt-2 w-44 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-xl z-50 py-1 font-mono text-[9px] uppercase tracking-wider text-left">
+                  <div className="absolute left-0 mt-2 w-44 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-xl z-50 py-1 font-mono text-[11px] uppercase tracking-wider text-left">
                     <button
                       onClick={() => { setActiveTab("market"); setMobileMarketOpen(false); }}
                       className={`w-full text-left px-3 py-1.5 hover:bg-editorial-gray flex items-center gap-1.5 cursor-pointer ${activeTab === "market" ? "text-editorial-red font-bold" : "text-editorial-charcoal"}`}
@@ -486,7 +486,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
               {mobileAboutOpen && (
                 <>
                   <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setMobileAboutOpen(false)} />
-                  <div className="absolute left-0 mt-2 w-40 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-xl z-50 py-1 font-mono text-[9px] uppercase tracking-wider text-left">
+                  <div className="absolute left-0 mt-2 w-40 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-xl z-50 py-1 font-mono text-[11px] uppercase tracking-wider text-left">
                     <button
                       onClick={() => { setActiveTab("about"); setMobileAboutOpen(false); }}
                       className={`w-full text-left px-3 py-1.5 hover:bg-editorial-gray flex items-center gap-1.5 cursor-pointer ${activeTab === "about" ? "text-editorial-red font-bold" : "text-editorial-charcoal"}`}
