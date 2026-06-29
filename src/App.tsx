@@ -9,6 +9,8 @@ import SellerPortal from "./components/SellerPortal";
 import MerchantHub from "./components/MerchantHub";
 import OrderTracker from "./components/OrderTracker";
 import AdminZone from "./components/AdminZone";
+import AboutUs from "./components/AboutUs";
+import OurPhilosophy from "./components/OurPhilosophy";
 import CartDrawer from "./components/CartDrawer";
 import CheckoutModal from "./components/CheckoutModal";
 import FAQModal from "./components/FAQModal";
@@ -189,6 +191,16 @@ function MainAppContent() {
         label: "Admin Kitchen",
         isCurrent: true
       });
+    } else if (activeTab === "about") {
+      items.push({
+        label: "About Us",
+        isCurrent: true
+      });
+    } else if (activeTab === "philosophy") {
+      items.push({
+        label: "Our Philosophy",
+        isCurrent: true
+      });
     }
 
     return items;
@@ -292,6 +304,20 @@ function MainAppContent() {
           {activeTab === "admin" && userRole === "admin" && (
             <div className="py-8 animate-in fade-in duration-150">
               <AdminZone />
+            </div>
+          )}
+
+          {/* ABOUT US TAB */}
+          {activeTab === "about" && (
+            <div className="py-8 animate-in fade-in duration-200">
+              <AboutUs />
+            </div>
+          )}
+
+          {/* OUR PHILOSOPHY TAB */}
+          {activeTab === "philosophy" && (
+            <div className="py-8 animate-in fade-in duration-200">
+              <OurPhilosophy />
             </div>
           )}
 
@@ -547,6 +573,8 @@ function MainAppContent() {
             <div className="grid grid-cols-2 gap-2">
               <button onClick={() => { setActiveTab("market"); setHeroCategoryFilter("all"); }} className="hover:text-amber-400 text-left cursor-pointer transition-colors">Marketplace</button>
               <button onClick={() => { setActiveTab("recipes"); setSelectedRecipeId(null); }} className="hover:text-amber-400 text-left cursor-pointer transition-colors">Recipes guides</button>
+              <button onClick={() => setActiveTab("about")} className="hover:text-amber-400 text-left cursor-pointer transition-colors">About Us</button>
+              <button onClick={() => setActiveTab("philosophy")} className="hover:text-amber-400 text-left cursor-pointer transition-colors">Our Philosophy</button>
               <button onClick={() => setActiveTab("seller")} className="hover:text-amber-400 text-left cursor-pointer transition-colors">Seller kitchen</button>
               <button onClick={() => setActiveTab("tracker")} className="hover:text-amber-400 text-left cursor-pointer transition-colors">Track orders</button>
               <button onClick={() => setIsFAQOpen(true)} className="hover:text-amber-450 text-left cursor-pointer transition-colors font-bold col-span-2 text-[#C1121F] border-t border-stone-800 pt-2 flex items-center gap-1.5 mt-1">
