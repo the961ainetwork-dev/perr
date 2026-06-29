@@ -14,6 +14,11 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
   const { cart, userRole, setUserRole, headerSearchQuery, setHeaderSearchQuery, products, recipes } = useApp();
   
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [marketOpen, setMarketOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  
+  const [mobileMarketOpen, setMobileMarketOpen] = useState(false);
+  const [mobileAboutOpen, setMobileAboutOpen] = useState(false);
   
   const trimmedQuery = headerSearchQuery.trim().toLowerCase();
   
@@ -264,9 +269,120 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
         </div>
 
         {/* Dynamic Center Tabs */}
-        <nav className="hidden md:flex items-center gap-4">
+        <nav className="hidden md:flex items-center gap-5">
+          {/* Marketplace Submenu */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setMarketOpen(true)}
+            onMouseLeave={() => setMarketOpen(false)}
+          >
+            <button
+              onClick={() => {
+                setActiveTab("market");
+                setMarketOpen(!marketOpen);
+              }}
+              className={`flex items-center gap-1.5 px-1 py-1 text-[11px] uppercase tracking-[0.2em] font-bold transition-all border-b-2 cursor-pointer ${
+                ["market", "showcase", "recipes", "dropship"].includes(activeTab)
+                  ? "border-editorial-red text-editorial-charcoal"
+                  : "border-transparent text-editorial-charcoal/40 hover:text-editorial-charcoal"
+              }`}
+            >
+              <Store className="w-3.5 h-3.5 shrink-0" />
+              <span>Marketplace</span>
+              <span className="text-[8px] opacity-60">▼</span>
+            </button>
+
+            {marketOpen && (
+              <div className="absolute left-0 mt-1 w-52 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150 rounded-none text-left">
+                <button
+                  onClick={() => { setActiveTab("market"); setMarketOpen(false); }}
+                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                    activeTab === "market" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
+                  }`}
+                >
+                  <Store className="w-3.5 h-3.5 shrink-0" />
+                  <span>Marketplace Home</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab("showcase"); setMarketOpen(false); }}
+                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                    activeTab === "showcase" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                  <span>Collection</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab("recipes"); setMarketOpen(false); }}
+                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                    activeTab === "recipes" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
+                  }`}
+                >
+                  <ChefHat className="w-3.5 h-3.5 shrink-0" />
+                  <span>Artisan Recipes</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab("dropship"); setMarketOpen(false); }}
+                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                    activeTab === "dropship" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
+                  }`}
+                >
+                  <Coins className="w-3.5 h-3.5 shrink-0" />
+                  <span>Dropship Hub</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* About Us Submenu */}
+          <div 
+            className="relative"
+            onMouseEnter={() => setAboutOpen(true)}
+            onMouseLeave={() => setAboutOpen(false)}
+          >
+            <button
+              onClick={() => {
+                setActiveTab("about");
+                setAboutOpen(!aboutOpen);
+              }}
+              className={`flex items-center gap-1.5 px-1 py-1 text-[11px] uppercase tracking-[0.2em] font-bold transition-all border-b-2 cursor-pointer ${
+                ["about", "philosophy"].includes(activeTab)
+                  ? "border-editorial-red text-editorial-charcoal"
+                  : "border-transparent text-editorial-charcoal/40 hover:text-editorial-charcoal"
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+              <span>About Us</span>
+              <span className="text-[8px] opacity-60">▼</span>
+            </button>
+
+            {aboutOpen && (
+              <div className="absolute left-0 mt-1 w-48 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-lg py-1.5 z-50 animate-in fade-in slide-in-from-top-1 duration-150 rounded-none text-left">
+                <button
+                  onClick={() => { setActiveTab("about"); setAboutOpen(false); }}
+                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                    activeTab === "about" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                  <span>About Hamod & Har</span>
+                </button>
+                <button
+                  onClick={() => { setActiveTab("philosophy"); setAboutOpen(false); }}
+                  className={`w-full text-left px-4 py-2 text-[10px] font-mono uppercase tracking-wider hover:bg-editorial-gray flex items-center gap-2 cursor-pointer ${
+                    activeTab === "philosophy" ? "text-editorial-red font-black" : "text-editorial-charcoal/80"
+                  }`}
+                >
+                  <Activity className="w-3.5 h-3.5 shrink-0" />
+                  <span>Our Philosophy</span>
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Other tabs */}
           {tabs
-            .filter((tab) => tab.role.includes(userRole))
+            .filter((tab) => tab.role.includes(userRole) && !["market", "showcase", "recipes", "dropship", "about", "philosophy"].includes(tab.id))
             .map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -275,7 +391,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
                   key={tab.id}
                   id={`nav-tab-${tab.id}`}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-1 py-1 text-[11px] uppercase tracking-[0.2em] font-bold transition-all border-b-2 ${
+                  className={`flex items-center gap-2 px-1 py-1 text-[11px] uppercase tracking-[0.2em] font-bold transition-all border-b-2 cursor-pointer ${
                     isActive
                       ? "border-editorial-red text-editorial-charcoal"
                       : "border-transparent text-editorial-charcoal/40 hover:text-editorial-charcoal"
@@ -291,17 +407,120 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
         {/* Action buttons (Right side) */}
         <div className="flex items-center gap-4">
           {/* Mobile view indicator or quick menu key */}
-          <div className="flex md:hidden bg-editorial-gray rounded-sm p-1 border border-editorial-charcoal/10">
+          <div className="flex md:hidden bg-editorial-gray rounded-sm p-1 border border-editorial-charcoal/10 gap-1">
+            {/* Marketplace Button Group on Mobile */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setActiveTab("market");
+                  setMobileMarketOpen(!mobileMarketOpen);
+                  setMobileAboutOpen(false);
+                }}
+                className={`p-2 rounded-xs transition-all flex items-center justify-center cursor-pointer ${
+                  ["market", "showcase", "recipes", "dropship"].includes(activeTab)
+                    ? "bg-editorial-charcoal text-editorial-cream font-bold"
+                    : "text-editorial-charcoal/60 hover:text-editorial-charcoal"
+                }`}
+                title="Marketplace Menu"
+              >
+                <Store className="w-3.5 h-3.5" />
+                <span className="text-[6.5px] ml-0.5">▼</span>
+              </button>
+
+              {mobileMarketOpen && (
+                <>
+                  <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setMobileMarketOpen(false)} />
+                  <div className="absolute left-0 mt-2 w-44 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-xl z-50 py-1 font-mono text-[9px] uppercase tracking-wider text-left">
+                    <button
+                      onClick={() => { setActiveTab("market"); setMobileMarketOpen(false); }}
+                      className={`w-full text-left px-3 py-1.5 hover:bg-editorial-gray flex items-center gap-1.5 cursor-pointer ${activeTab === "market" ? "text-editorial-red font-bold" : "text-editorial-charcoal"}`}
+                    >
+                      <Store className="w-3.5 h-3.5 shrink-0" />
+                      <span>Market Home</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("showcase"); setMobileMarketOpen(false); }}
+                      className={`w-full text-left px-3 py-1.5 hover:bg-editorial-gray flex items-center gap-1.5 cursor-pointer ${activeTab === "showcase" ? "text-editorial-red font-bold" : "text-editorial-charcoal"}`}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                      <span>Collection</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("recipes"); setMobileMarketOpen(false); }}
+                      className={`w-full text-left px-3 py-1.5 hover:bg-editorial-gray flex items-center gap-1.5 cursor-pointer ${activeTab === "recipes" ? "text-editorial-red font-bold" : "text-editorial-charcoal"}`}
+                    >
+                      <ChefHat className="w-3.5 h-3.5 shrink-0" />
+                      <span>Artisan Recipes</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("dropship"); setMobileMarketOpen(false); }}
+                      className={`w-full text-left px-3 py-1.5 hover:bg-editorial-gray flex items-center gap-1.5 cursor-pointer ${activeTab === "dropship" ? "text-editorial-red font-bold" : "text-editorial-charcoal"}`}
+                    >
+                      <Coins className="w-3.5 h-3.5 shrink-0" />
+                      <span>Dropship Hub</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* About Us Button Group on Mobile */}
+            <div className="relative">
+              <button
+                onClick={() => {
+                  setActiveTab("about");
+                  setMobileAboutOpen(!mobileAboutOpen);
+                  setMobileMarketOpen(false);
+                }}
+                className={`p-2 rounded-xs transition-all flex items-center justify-center cursor-pointer ${
+                  ["about", "philosophy"].includes(activeTab)
+                    ? "bg-editorial-charcoal text-editorial-cream font-bold"
+                    : "text-editorial-charcoal/60 hover:text-editorial-charcoal"
+                }`}
+                title="About Menu"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span className="text-[6.5px] ml-0.5">▼</span>
+              </button>
+
+              {mobileAboutOpen && (
+                <>
+                  <div className="fixed inset-0 z-40 bg-transparent" onClick={() => setMobileAboutOpen(false)} />
+                  <div className="absolute left-0 mt-2 w-40 bg-[#FAF9F6] border-2 border-editorial-charcoal shadow-xl z-50 py-1 font-mono text-[9px] uppercase tracking-wider text-left">
+                    <button
+                      onClick={() => { setActiveTab("about"); setMobileAboutOpen(false); }}
+                      className={`w-full text-left px-3 py-1.5 hover:bg-editorial-gray flex items-center gap-1.5 cursor-pointer ${activeTab === "about" ? "text-editorial-red font-bold" : "text-editorial-charcoal"}`}
+                    >
+                      <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                      <span>About Us</span>
+                    </button>
+                    <button
+                      onClick={() => { setActiveTab("philosophy"); setMobileAboutOpen(false); }}
+                      className={`w-full text-left px-3 py-1.5 hover:bg-editorial-gray flex items-center gap-1.5 cursor-pointer ${activeTab === "philosophy" ? "text-editorial-red font-bold" : "text-editorial-charcoal"}`}
+                    >
+                      <Activity className="w-3.5 h-3.5 shrink-0" />
+                      <span>Our Philosophy</span>
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Other buttons on Mobile */}
             {tabs
-              .filter((tab) => tab.role.includes(userRole))
+              .filter((tab) => tab.role.includes(userRole) && !["market", "showcase", "recipes", "dropship", "about", "philosophy"].includes(tab.id))
               .map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`p-2 rounded-xs transition-all ${
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      setMobileMarketOpen(false);
+                      setMobileAboutOpen(false);
+                    }}
+                    className={`p-2 rounded-xs transition-all cursor-pointer ${
                       isActive ? "bg-editorial-charcoal text-editorial-cream" : "text-editorial-charcoal/60 hover:text-editorial-charcoal"
                     }`}
                     title={tab.label}

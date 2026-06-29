@@ -1075,7 +1075,7 @@ export default function AdminZone() {
               </div>
             ) : (
               <div className="overflow-x-auto text-xs font-sans">
-                <table className="w-full text-left text-editorial-charcoal border-collapse whitespace-nowrap">
+                <table className="w-full text-left text-editorial-charcoal border-collapse whitespace-nowrap" id="admin-order-management-table">
                   <thead>
                     <tr className="border-b border-editorial-charcoal text-[9px] font-mono text-editorial-charcoal/50 uppercase tracking-widest font-extrabold pb-2">
                       <th className="py-2.5">Reference</th>
@@ -1103,13 +1103,33 @@ export default function AdminZone() {
                           </td>
                           <td className="py-3 font-mono font-bold text-editorial-red">${o.total.toFixed(2)}</td>
                           <td className="py-3">
-                            <span className={`inline-block px-2 py-0.5 text-[8.5px] font-mono font-bold uppercase tracking-wider ${
-                              o.status === "Completed" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" :
-                              o.status === "Shipped" ? "bg-amber-50 text-amber-700 border border-amber-200 animate-pulse" :
-                              o.status === "Cancelled" ? "bg-red-50 text-red-700 border border-red-200" : "bg-stone-100 text-stone-600 border border-stone-200"
-                            }`}>
-                              {o.status}
-                            </span>
+                            <select
+                              value={o.status}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => {
+                                const nextStatus = e.target.value as any;
+                                updateOrderStatus(o.id, nextStatus);
+                                addToast({
+                                  title: "Order Status Updated",
+                                  message: `Order reference ${o.id} successfully set to ${nextStatus}.`,
+                                  type: "success"
+                                });
+                              }}
+                              className={`px-2 py-1 text-[9px] font-mono font-bold uppercase tracking-wider border rounded-none focus:outline-none focus:ring-1 focus:ring-editorial-charcoal cursor-pointer transition-all ${
+                                o.status === "Completed" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                                o.status === "Shipped" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                                o.status === "In Progress" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                                o.status === "Cancelled" ? "bg-red-50 text-red-700 border-red-200" :
+                                "bg-stone-100 text-stone-600 border-stone-200"
+                              }`}
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="In Progress">In Progress</option>
+                              <option value="Ready for Shipping">Ready for Shipping</option>
+                              <option value="Shipped">Shipped</option>
+                              <option value="Completed">Completed</option>
+                              <option value="Cancelled">Cancelled</option>
+                            </select>
                           </td>
                           <td className="py-3 text-right">
                             <button

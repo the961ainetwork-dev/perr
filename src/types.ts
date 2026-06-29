@@ -84,7 +84,7 @@ export interface Order {
   subtotal: number;
   shippingAndTax: number;
   total: number;
-  status: "Pending" | "Ready for Shipping" | "Shipped" | "Completed" | "Cancelled";
+  status: "Pending" | "In Progress" | "Ready for Shipping" | "Shipped" | "Completed" | "Cancelled";
   createdAt: string;
 }
 
