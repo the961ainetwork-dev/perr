@@ -137,17 +137,17 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-6 font-sans text-editorial-charcoal relative" id="catalogue-view">
+    <div className="max-w-7xl mx-auto px-6 py-6 font-sans text-editorial-charcoal relative text-[13.5px] sm:text-[15.5px]" id="catalogue-view">
       
       {/* Decorative Title Block */}
       <div className="text-center space-y-3 mb-10">
-        <div className="inline-flex items-center gap-2 bg-editorial-charcoal text-editorial-cream px-3 py-1 text-[10px] font-mono uppercase tracking-widest font-extrabold">
+        <div className="inline-flex items-center gap-2 bg-editorial-charcoal text-editorial-cream px-3 py-1 text-[12px] font-mono uppercase tracking-widest font-extrabold">
           <span>🏺 GLOBAL REGISTRY CATALOGUE 🏺</span>
         </div>
-        <h2 className="font-serif text-3xl sm:text-4xl font-extrabold italic text-editorial-charcoal leading-tight tracking-tight">
+        <h2 className="font-serif text-4xl sm:text-5xl font-extrabold italic text-editorial-charcoal leading-tight tracking-tight">
           The Curated Crop Specimens Index
         </h2>
-        <p className="text-xs text-editorial-charcoal/70 max-w-xl mx-auto font-serif italic">
+        <p className="text-sm text-editorial-charcoal/70 max-w-xl mx-auto font-serif italic">
           Inspect, evaluate, and order small-batch live lacto-fermented specimens directly from our cooperative farmers. Configure custom active probiotics per item.
         </p>
       </div>
@@ -158,18 +158,17 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
         <div className="w-full space-y-6">
           <div className="bg-white border-2 border-editorial-charcoal/15 shadow-sm overflow-hidden">
             <div className="p-4 bg-editorial-charcoal text-editorial-cream border-b border-editorial-charcoal flex justify-between items-center">
-              <span className="font-mono text-[10px] uppercase tracking-widest font-bold">Specimens Catalog Registry</span>
-              <span className="text-[10px] font-mono uppercase px-2 py-0.5 bg-editorial-red text-white font-bold">{products.length} Items Listed</span>
+              <span className="font-mono text-[12px] uppercase tracking-widest font-bold">Specimens Catalog Registry</span>
+              <span className="text-[12px] font-mono uppercase px-2 py-0.5 bg-editorial-red text-white font-bold">{products.length} Items Listed</span>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse text-[11.5px] whitespace-nowrap min-w-[700px]">
+              <table className="w-full text-left border-collapse text-[13.5px] whitespace-nowrap min-w-[700px]">
                 <thead>
-                  <tr className="bg-editorial-gray/60 text-editorial-charcoal/70 uppercase tracking-widest font-mono text-[9px] border-b border-editorial-charcoal/10 font-bold">
+                  <tr className="bg-editorial-gray/60 text-editorial-charcoal/70 uppercase tracking-widest font-mono text-[11px] border-b border-editorial-charcoal/10 font-bold">
                     <th className="p-3">ID</th>
                     <th className="p-3">Specimen Spec</th>
-                    <th className="p-3">Description</th>
-                    <th className="p-3">Weight (Oz)</th>
+                    <th className="p-3 w-1/3 min-w-[320px]">Description</th>
                     <th className="p-3">KG Equivalent</th>
                     <th className="p-3">Probiotics Option</th>
                     <th className="p-3 text-right">Price</th>
@@ -186,7 +185,7 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                     return (
                       <tr key={p.id} className="hover:bg-editorial-gray/15 transition-colors group" id={`specimen-row-${p.id}`}>
                         {/* ID */}
-                        <td className="p-3 font-mono text-[9.5px] font-bold text-editorial-red">
+                        <td className="p-3 font-mono text-[11.5px] font-bold text-editorial-red">
                           #{p.id.replace("prod-", "")}
                         </td>
 
@@ -200,10 +199,10 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                               referrerPolicy="no-referrer"
                             />
                             <div>
-                              <span className="font-serif italic font-extrabold text-xs block text-editorial-charcoal group-hover:text-editorial-red transition-all">
+                              <span className="font-serif italic font-extrabold text-sm block text-editorial-charcoal group-hover:text-editorial-red transition-all">
                                 {p.name}
                               </span>
-                              <span className="inline-block px-1.5 py-0.5 mt-0.5 font-mono text-[8px] font-bold uppercase tracking-widest bg-stone-100 text-stone-600 border border-stone-200">
+                              <span className="inline-block px-1.5 py-0.5 mt-0.5 font-mono text-[10px] font-bold uppercase tracking-widest bg-stone-100 text-stone-600 border border-stone-200">
                                 {p.category}
                               </span>
                             </div>
@@ -211,13 +210,8 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                         </td>
 
                         {/* DESCRIPTION */}
-                        <td className="p-3 max-w-[180px] overflow-hidden text-ellipsis whitespace-normal text-[10.5px] leading-snug text-editorial-charcoal/80">
+                        <td className="p-3 whitespace-normal text-[12.5px] leading-relaxed text-editorial-charcoal/80">
                           {p.description}
-                        </td>
-
-                        {/* WEIGHT (OZ) */}
-                        <td className="p-3 font-mono font-bold text-stone-600">
-                          {weight.oz}
                         </td>
 
                         {/* KG EQUIVALENT */}
@@ -230,7 +224,7 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                           <select
                             value={selectedProb}
                             onChange={(e) => setProbiotics((prev) => ({ ...prev, [p.id]: e.target.value as "Active" | "Pasteurized" }))}
-                            className="bg-stone-50 border border-editorial-charcoal/15 p-1 text-[10px] font-mono focus:outline-none focus:border-editorial-red rounded-none font-bold"
+                            className="bg-stone-50 border border-editorial-charcoal/15 p-1 text-[12px] font-mono focus:outline-none focus:border-editorial-red rounded-none font-bold"
                           >
                             <option value="Active">🟢 Live Probiotic</option>
                             <option value="Pasteurized">⚪ Pasteurized</option>
@@ -238,14 +232,14 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                         </td>
 
                         {/* PRICE */}
-                        <td className="p-3 text-right font-serif font-black text-xs text-editorial-charcoal">
+                        <td className="p-3 text-right font-serif font-black text-sm text-editorial-charcoal">
                           ${p.price.toFixed(2)}
                         </td>
 
                         {/* ORDER BUTTON & QTY INPUT */}
                         <td className="p-3 text-center">
                           {isOutOfStock ? (
-                            <span className="px-2 py-1 bg-red-50 text-red-600 border border-red-200 font-mono text-[8px] font-extrabold uppercase tracking-widest">
+                            <span className="px-2 py-1 bg-red-50 text-red-600 border border-red-200 font-mono text-[10px] font-extrabold uppercase tracking-widest">
                               Sold Out
                             </span>
                           ) : (
@@ -264,7 +258,7 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                                   max={p.stock}
                                   value={selectedQty}
                                   onChange={(e) => handleQtyChange(p.id, parseInt(e.target.value, 10) || 1, p.stock)}
-                                  className="w-8 text-center bg-transparent text-[11px] font-mono font-extrabold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                  className="w-8 text-center bg-transparent text-[13px] font-mono font-extrabold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                 />
                                 <button
                                   type="button"
@@ -276,7 +270,7 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                               </div>
                               <button
                                 onClick={() => handleOrderClick(p)}
-                                className="h-7 px-3 bg-editorial-charcoal hover:bg-editorial-red text-editorial-cream text-[10px] font-mono uppercase tracking-widest font-black transition-all rounded-none cursor-pointer flex items-center justify-center gap-1"
+                                className="h-7 px-3 bg-editorial-charcoal hover:bg-editorial-red text-editorial-cream text-[12px] font-mono uppercase tracking-widest font-black transition-all rounded-none cursor-pointer flex items-center justify-center gap-1"
                                 id={`order-btn-${p.id}`}
                               >
                                 <span>Order</span>
@@ -296,14 +290,14 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
           {/* DYNAMIC BACK TO CATALOGUE ACTION BAR */}
           <div className="bg-stone-50 border border-[#FAF9F6]/20 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="text-left">
-              <h4 className="font-serif font-extrabold italic text-editorial-charcoal text-sm">Need Help Customizing?</h4>
-              <p className="text-[11px] text-editorial-charcoal/60 leading-relaxed max-w-md">
+              <h4 className="font-serif font-extrabold italic text-editorial-charcoal text-base">Need Help Customizing?</h4>
+              <p className="text-[13px] text-editorial-charcoal/60 leading-relaxed max-w-md">
                 Our brine specialists configure specific lactic fermentation metrics for multi-gallon commercial orders. Access our tracking portal for wholesale requests.
               </p>
             </div>
             <button
               onClick={() => onSetTab("tracker")}
-              className="px-4 py-2 border border-editorial-charcoal hover:bg-editorial-charcoal hover:text-white text-[10px] font-mono uppercase tracking-wider font-extrabold transition-all shrink-0 rounded-none cursor-pointer"
+              className="px-4 py-2 border border-editorial-charcoal hover:bg-editorial-charcoal hover:text-white text-[12px] font-mono uppercase tracking-wider font-extrabold transition-all shrink-0 rounded-none cursor-pointer"
             >
               Consult Shipment Logs 📋
             </button>
@@ -315,10 +309,10 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
       {cart.length > 0 && (
         <div className="mt-12 pt-8 border-t-2 border-editorial-charcoal/20 space-y-6 animate-in fade-in duration-200" id="order-execution-block">
           <div className="text-left space-y-1">
-            <h3 className="font-serif text-xl sm:text-2xl font-black italic text-editorial-charcoal">
+            <h3 className="font-serif text-2xl sm:text-3xl font-black italic text-editorial-charcoal">
               🏺 Order Execution & Barter Summary
             </h3>
-            <p className="text-xs text-editorial-charcoal/60 font-serif italic">
+            <p className="text-sm text-editorial-charcoal/60 font-serif italic">
               Review your selected specimen crops in the temporary registry and complete secure dispatch info.
             </p>
           </div>
@@ -329,9 +323,9 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
               <div className="pb-3 border-b border-editorial-charcoal/20 flex justify-between items-center">
                 <div className="flex items-center gap-1.5">
                   <span className="text-base">📋</span>
-                  <h3 className="font-serif font-extrabold italic text-sm text-editorial-charcoal">Order Exec Summary</h3>
+                  <h3 className="font-serif font-extrabold italic text-base text-editorial-charcoal">Order Exec Summary</h3>
                 </div>
-                <span className="font-mono text-[9px] uppercase tracking-wider text-stone-500">
+                <span className="font-mono text-[11px] uppercase tracking-wider text-stone-500">
                   {cart.reduce((sum, item) => sum + item.quantity, 0)} Items
                 </span>
               </div>
@@ -344,20 +338,20 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                     return (
                       <div key={idx} className="py-2.5 flex items-start justify-between gap-3 text-left">
                         <div className="min-w-0">
-                          <span className="block font-serif italic text-xs font-bold text-editorial-charcoal leading-tight truncate">
+                          <span className="block font-serif italic text-sm font-bold text-editorial-charcoal leading-tight truncate">
                             {item.product.name}
                           </span>
-                          <span className="block font-mono text-[8px] uppercase text-stone-500 leading-none mt-1">
+                          <span className="block font-mono text-[10px] uppercase text-stone-500 leading-none mt-1">
                             {item.quantity}x @ ${price.toFixed(2)} each
                           </span>
                           {item.giftMessage && (
-                            <span className="block font-mono text-[7.5px] text-amber-600 font-extrabold uppercase mt-0.5">
+                            <span className="block font-mono text-[9.5px] text-amber-600 font-extrabold uppercase mt-0.5">
                               🌿 {item.giftMessage}
                             </span>
                           )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
-                          <span className="font-mono text-xs text-stone-700 font-bold">
+                          <span className="font-mono text-sm text-stone-700 font-bold">
                             ${(price * item.quantity).toFixed(2)}
                           </span>
                           <button
@@ -374,7 +368,7 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                 </div>
 
                 {/* Subtotal Calculations */}
-                <div className="bg-stone-50 p-3 border border-stone-200 text-xs space-y-1.5 font-mono">
+                <div className="bg-stone-50 p-3 border border-stone-200 text-sm space-y-1.5 font-mono">
                   <div className="flex justify-between text-stone-500">
                     <span>Items Subtotal:</span>
                     <span className="font-bold text-stone-700">${cartSubtotal.toFixed(2)}</span>
@@ -389,13 +383,13 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                       {shippingCost === 0 ? "FREE" : `$${shippingCost.toFixed(2)}`}
                     </span>
                   </div>
-                  <div className="border-t border-dashed border-stone-300 pt-2 flex justify-between font-serif font-black italic text-sm text-editorial-charcoal">
+                  <div className="border-t border-dashed border-stone-300 pt-2 flex justify-between font-serif font-black italic text-base text-editorial-charcoal">
                     <span>Grand Total Value:</span>
-                    <span className="font-mono text-sm not-italic text-editorial-red">${grandTotal.toFixed(2)}</span>
+                    <span className="font-mono text-base not-italic text-editorial-red">${grandTotal.toFixed(2)}</span>
                   </div>
                 </div>
 
-                <div className="flex justify-between gap-2 text-[9px] font-mono uppercase tracking-widest pt-1">
+                <div className="flex justify-between gap-2 text-[11px] font-mono uppercase tracking-widest pt-1">
                   <button
                     onClick={() => {
                       clearCart();
@@ -424,13 +418,13 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
             <div className="lg:col-span-7 bg-[#1C2D18] text-white border-2 border-editorial-charcoal shadow-md p-5 space-y-4 text-left">
               <div className="pb-2 border-b border-white/10 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                <h3 className="font-serif font-extrabold italic text-sm text-white">Execute Secure Payment</h3>
+                <h3 className="font-serif font-extrabold italic text-base text-white">Execute Secure Payment</h3>
               </div>
 
-              <form onSubmit={handleExecuteOrder} className="space-y-3.5 font-sans text-xs">
+              <form onSubmit={handleExecuteOrder} className="space-y-3.5 font-sans text-sm">
                 {/* Name */}
                 <div className="space-y-1">
-                  <label htmlFor="checkout-name-input" className="font-mono text-[9px] uppercase tracking-widest text-white/50 block font-bold">
+                  <label htmlFor="checkout-name-input" className="font-mono text-[11px] uppercase tracking-widest text-white/50 block font-bold">
                     Recipient Full Name
                   </label>
                   <input
@@ -440,13 +434,13 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                     placeholder="E.g. Captain Cucumber"
                     value={checkoutName}
                     onChange={(e) => setCheckoutName(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors"
+                    className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors text-sm"
                   />
                 </div>
 
                 {/* Email */}
                 <div className="space-y-1">
-                  <label htmlFor="checkout-email-input" className="font-mono text-[9px] uppercase tracking-widest text-white/50 block font-bold">
+                  <label htmlFor="checkout-email-input" className="font-mono text-[11px] uppercase tracking-widest text-white/50 block font-bold">
                     Email Address
                   </label>
                   <input
@@ -456,13 +450,13 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                     placeholder="name@fermentation.org"
                     value={checkoutEmail}
                     onChange={(e) => setCheckoutEmail(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors"
+                    className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors text-sm"
                   />
                 </div>
 
                 {/* Shipping Address */}
                 <div className="space-y-1">
-                  <label htmlFor="checkout-address-input" className="font-mono text-[9px] uppercase tracking-widest text-white/50 block font-bold">
+                  <label htmlFor="checkout-address-input" className="font-mono text-[11px] uppercase tracking-widest text-white/50 block font-bold">
                     Delivery Address
                   </label>
                   <input
@@ -472,14 +466,14 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                     placeholder="123 Dill Barrel Lane"
                     value={checkoutAddress}
                     onChange={(e) => setCheckoutAddress(e.target.value)}
-                    className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors"
+                    className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors text-sm"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
                   {/* City */}
                   <div className="space-y-1">
-                    <label htmlFor="checkout-city-input" className="font-mono text-[9px] uppercase tracking-widest text-white/50 block font-bold">
+                    <label htmlFor="checkout-city-input" className="font-mono text-[11px] uppercase tracking-widest text-white/50 block font-bold">
                       City
                     </label>
                     <input
@@ -489,12 +483,12 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                       placeholder="Brinesburg"
                       value={checkoutCity}
                       onChange={(e) => setCheckoutCity(e.target.value)}
-                      className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors"
+                      className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors text-sm"
                     />
                   </div>
                   {/* ZIP */}
                   <div className="space-y-1">
-                    <label htmlFor="checkout-zip-input" className="font-mono text-[9px] uppercase tracking-widest text-white/50 block font-bold">
+                    <label htmlFor="checkout-zip-input" className="font-mono text-[11px] uppercase tracking-widest text-white/50 block font-bold">
                       ZIP Code
                     </label>
                     <input
@@ -504,17 +498,17 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                       placeholder="90210"
                       value={checkoutZip}
                       onChange={(e) => setCheckoutZip(e.target.value)}
-                      className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors"
+                      className="w-full bg-white/5 border border-white/15 focus:border-emerald-400 p-2 text-white placeholder-white/30 rounded-none focus:outline-none transition-colors text-sm"
                     />
                   </div>
                 </div>
 
                 {/* Payment Options */}
                 <div className="space-y-1.5">
-                  <label className="font-mono text-[9px] uppercase tracking-widest text-white/50 block font-bold">
+                  <label className="font-mono text-[11px] uppercase tracking-widest text-white/50 block font-bold">
                     Payment Method
                   </label>
-                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                  <div className="grid grid-cols-2 gap-2 text-[12px] font-mono">
                     <label className={`border p-2 flex items-center gap-1.5 cursor-pointer transition-all ${paymentMethod === "Credit Card" ? "bg-white/10 border-emerald-400 text-white" : "border-white/10 text-white/60 hover:border-white/20"}`}>
                       <input
                         type="radio"
@@ -544,7 +538,7 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-stone-950 text-xs font-mono uppercase tracking-widest font-black transition-all rounded-none cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
+                    className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-stone-950 text-sm font-mono uppercase tracking-widest font-black transition-all rounded-none cursor-pointer flex items-center justify-center gap-1.5 shadow-md"
                     id="execute-payment-btn"
                   >
                     <span>Execute Order &amp; Pay ${grandTotal.toFixed(2)}</span>
@@ -578,17 +572,17 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
 
               <div className="space-y-2">
                 <span className="text-3xl">🛒</span>
-                <h4 className="font-serif font-extrabold italic text-editorial-charcoal text-lg">
+                <h4 className="font-serif font-extrabold italic text-editorial-charcoal text-xl">
                   Successfully Enrolled!
                 </h4>
-                <p className="text-xs text-stone-600 font-sans">
+                <p className="text-sm text-stone-600 font-sans">
                   You added <strong className="text-editorial-charcoal font-bold">{lastAddedProduct.name}</strong> to your temporary registry.
                 </p>
               </div>
 
               {/* Order summary visualization in Continue Shopping Modal */}
-              <div className="bg-stone-50 border border-stone-200 p-3 text-left space-y-1.5 rounded-none font-mono text-[10px]">
-                <span className="text-stone-400 uppercase text-[8px] font-bold block">Current Order Summary:</span>
+              <div className="bg-stone-50 border border-stone-200 p-3 text-left space-y-1.5 rounded-none font-mono text-[12px]">
+                <span className="text-stone-400 uppercase text-[10px] font-bold block">Current Order Summary:</span>
                 <div className="flex justify-between font-bold text-stone-700">
                   <span>Subtotal Value:</span>
                   <span>${cartSubtotal.toFixed(2)}</span>
@@ -600,11 +594,11 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
               </div>
 
               <div className="space-y-2.5">
-                <p className="font-serif text-xs font-bold text-editorial-charcoal">
+                <p className="font-serif text-sm font-bold text-editorial-charcoal">
                   Would you like to continue shopping or proceed to payment execution?
                 </p>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] font-mono uppercase tracking-wider">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[12px] font-mono uppercase tracking-wider">
                   <button
                     onClick={() => {
                       setShowContinueModal(false);
@@ -648,7 +642,7 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                         onOpenCart();
                       }
                     }}
-                    className="text-[9px] font-mono text-stone-400 hover:text-editorial-charcoal uppercase tracking-widest font-extrabold flex items-center justify-center gap-1 mx-auto cursor-pointer"
+                    className="text-[11px] font-mono text-stone-400 hover:text-editorial-charcoal uppercase tracking-widest font-extrabold flex items-center justify-center gap-1 mx-auto cursor-pointer"
                   >
                     <span>Or direct me to full Cart Drawer</span>
                     <ArrowRight className="w-3 h-3" />
@@ -673,37 +667,37 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
             >
               <div className="text-center space-y-2">
                 <span className="text-4xl">🎉</span>
-                <h3 className="font-serif font-extrabold italic text-xl text-editorial-charcoal">
+                <h3 className="font-serif font-extrabold italic text-2xl text-editorial-charcoal">
                   Invoice Executed Successfully
                 </h3>
-                <p className="text-[10px] font-mono uppercase text-emerald-600 font-extrabold tracking-widest">
+                <p className="text-[12px] font-mono uppercase text-emerald-600 font-extrabold tracking-widest">
                   Secure Barter Transaction Complete
                 </p>
               </div>
 
               {/* RECEIPT SUMMARY FOR THE ORDER TO EXECUTE */}
-              <div className="border border-dashed border-stone-300 p-4 font-mono text-[10.5px] text-stone-700 bg-stone-50 space-y-3.5">
+              <div className="border border-dashed border-stone-300 p-4 font-mono text-[12.5px] text-stone-700 bg-stone-50 space-y-3.5">
                 <div className="flex justify-between border-b border-dashed border-stone-200 pb-2">
                   <span className="font-bold text-stone-500">REGISTRY INVOICE:</span>
                   <span className="font-black text-editorial-red">{successOrder.id}</span>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-stone-400 uppercase text-[8px] font-bold block">RECIPIENT SPEC:</span>
-                  <p className="font-sans font-bold text-editorial-charcoal">{successOrder.customerName}</p>
+                  <span className="text-stone-400 uppercase text-[10px] font-bold block">RECIPIENT SPEC:</span>
+                  <p className="font-sans font-bold text-editorial-charcoal text-sm">{successOrder.customerName}</p>
                   <p className="font-sans text-stone-600">{successOrder.customerEmail}</p>
                 </div>
 
                 <div className="space-y-1">
-                  <span className="text-stone-400 uppercase text-[8px] font-bold block">SHIPPING DESTINATION:</span>
+                  <span className="text-stone-400 uppercase text-[10px] font-bold block">SHIPPING DESTINATION:</span>
                   <p className="font-sans font-medium text-stone-700 italic">
                     {successOrder.shippingAddress}, {successOrder.city} - {successOrder.zipCode}
                   </p>
                 </div>
 
                 <div className="space-y-1.5 border-t border-dashed border-stone-200 pt-2.5">
-                  <span className="text-stone-400 uppercase text-[8px] font-bold block">ACQUIRED CROP RECORD:</span>
-                  <div className="max-h-[100px] overflow-y-auto space-y-1 pr-1 text-[10px]">
+                  <span className="text-stone-400 uppercase text-[10px] font-bold block">ACQUIRED CROP RECORD:</span>
+                  <div className="max-h-[100px] overflow-y-auto space-y-1 pr-1 text-[12px]">
                     {successOrder.items.map((item: any, i: number) => (
                       <div key={i} className="flex justify-between">
                         <span className="truncate max-w-[200px]">
@@ -720,9 +714,9 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                     <span>Tax &amp; Delivery:</span>
                     <span>${successOrder.shippingAndTax.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-editorial-charcoal font-black text-xs font-serif italic pt-1 border-t border-dotted border-stone-200">
+                  <div className="flex justify-between text-editorial-charcoal font-black text-sm font-serif italic pt-1 border-t border-dotted border-stone-200">
                     <span>Total Barter Cost:</span>
-                    <span className="font-mono not-italic text-editorial-red">${successOrder.total.toFixed(2)}</span>
+                    <span className="font-mono not-italic text-editorial-red text-sm">${successOrder.total.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
@@ -733,7 +727,7 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                     setSuccessOrder(null);
                     onSetTab("tracker");
                   }}
-                  className="w-full py-2.5 bg-[#1C2D18] hover:bg-editorial-red text-editorial-cream text-[10px] font-mono uppercase tracking-widest font-black transition-all rounded-none cursor-pointer text-center"
+                  className="w-full py-2.5 bg-[#1C2D18] hover:bg-editorial-red text-editorial-cream text-[12px] font-mono uppercase tracking-widest font-black transition-all rounded-none cursor-pointer text-center"
                 >
                   Track Live Shipment Status 🚚
                 </button>
@@ -742,7 +736,7 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                     setSuccessOrder(null);
                     onSetTab("market");
                   }}
-                  className="w-full py-2 text-stone-500 hover:text-editorial-charcoal text-[9px] font-mono uppercase tracking-widest font-bold transition-all text-center cursor-pointer border border-transparent hover:border-stone-200"
+                  className="w-full py-2 text-stone-500 hover:text-editorial-charcoal text-[11px] font-mono uppercase tracking-widest font-bold transition-all text-center cursor-pointer border border-transparent hover:border-stone-200"
                 >
                   Close Receipt &amp; Return Home
                 </button>
