@@ -33,7 +33,7 @@ interface AppContextType {
   toasts: ToastMessage[];
   addToast: (toast: Omit<ToastMessage, "id">) => void;
   removeToast: (id: string) => void;
-  addToCart: (product: Product, quantity?: number) => void;
+  addToCart: (product: Product, quantity?: number, recipientEmail?: string, giftMessage?: string, selectedPrice?: number) => void;
   removeFromCart: (productId: string) => void;
   updateCartQuantity: (productId: string, qty: number) => void;
   clearCart: () => void;
@@ -203,21 +203,48 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   // CART WORKFLOW
-  const addToCart = (product: Product, quantity: number = 1) => {
+  const addToCart = (
+    product: Product,
+    quantity: number = 1,
+    recipientEmail?: string,
+    giftMessage?: string,
+    selectedPrice?: number
+  ) => {
     setCart((prev) => {
-      const existing = prev.find((item) => item.product.id === product.id);
+      const existing = prev.find(
+        (item) =>
+          item.product.id === product.id &&
+          item.recipientEmail === recipientEmail &&
+          item.giftMessage === giftMessage &&
+          item.selectedPrice === selectedPrice
+      );
       if (existing) {
         return prev.map((item) =>
-          item.product.id === product.id
+          item.product.id === product.id &&
+          item.recipientEmail === recipientEmail &&
+          item.giftMessage === giftMessage &&
+          item.selectedPrice === selectedPrice
             ? { ...item, quantity: Math.min(product.stock, item.quantity + quantity) }
             : item
         );
       }
-      return [...prev, { product, quantity: Math.min(product.stock, quantity) }];
+      return [
+        ...prev,
+        {
+          product,
+          quantity: Math.min(product.stock, quantity),
+          recipientEmail,
+          giftMessage,
+          selectedPrice,
+        },
+      ];
     });
   };
 
   const removeFromCart = (productId: string) => {
+    // For removing we can remove items matching this product.id. 
+    // To be safe and let user remove specific variants, let's remove by product id first
+    // or if we have special metadata we'd matching them. Here simple filter is fine:
     setCart((prev) => prev.filter((item) => item.product.id !== productId));
   };
 
@@ -246,20 +273,45 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     zipCode: string;
     paymentMethod: string;
   }) => {
-    const subtotal = cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
-    const shippingAndTax = subtotal > 40 ? 4.99 : 8.99;
+    const subtotal = cart.reduce((acc, item) => {
+      const price = item.selectedPrice !== undefined ? item.selectedPrice : item.product.price;
+      return acc + price * item.quantity;
+    }, 0);
+
+    // Exclude gift cards from shipping cost calculation
+    const shippableSubtotal = cart.reduce((acc, item) => {
+      const isGift = item.product.id === "gift_card" || item.product.tags?.includes("giftcard");
+      if (isGift) return acc;
+      const price = item.selectedPrice !== undefined ? item.selectedPrice : item.product.price;
+      return acc + price * item.quantity;
+    }, 0);
+
+    const hasShippableItems = cart.some(
+      (item) => !(item.product.id === "gift_card" || item.product.tags?.includes("giftcard"))
+    );
+
+    const shippingAndTax = hasShippableItems ? (shippableSubtotal > 40 ? 4.99 : 8.99) : 0;
     const total = parseFloat((subtotal + shippingAndTax).toFixed(2));
 
-    const orderItems = cart.map((item) => ({
-      productId: item.product.id,
-      productName: item.product.name,
-      price: item.product.price,
-      quantity: item.quantity,
-      image: item.product.image,
-    }));
+    const orderId = `ORD-${Math.floor(10000 + Math.random() * 90000)}`;
+
+    const orderItems = cart.map((item) => {
+      const price = item.selectedPrice !== undefined ? item.selectedPrice : item.product.price;
+      const isGift = item.product.id === "gift_card" || item.product.tags?.includes("giftcard");
+      return {
+        productId: item.product.id,
+        productName: item.product.name + (item.selectedPrice ? ` ($${item.selectedPrice})` : ""),
+        price,
+        quantity: item.quantity,
+        image: item.product.image,
+        recipientEmail: item.recipientEmail,
+        giftMessage: item.giftMessage,
+        isGiftCard: isGift,
+      };
+    });
 
     const newOrder: Order = {
-      id: `ORD-${Math.floor(10000 + Math.random() * 90000)}`,
+      id: orderId,
       customerName: details.customerName,
       customerEmail: details.customerEmail,
       shippingAddress: details.shippingAddress,
@@ -275,6 +327,33 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     setOrders((prev) => [newOrder, ...prev]);
+
+    // Send Webhook signals for each gift card item in the order
+    cart.forEach((item) => {
+      const isGift = item.product.id === "gift_card" || item.product.tags?.includes("giftcard");
+      if (isGift && item.recipientEmail) {
+        const price = item.selectedPrice !== undefined ? item.selectedPrice : item.product.price;
+        fetch("/api/webhooks/gift-card-sale", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            orderId,
+            cardValue: price,
+            recipientEmail: item.recipientEmail,
+            giftMessage: item.giftMessage || "",
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("Gift card webhook successful:", data);
+          })
+          .catch((err) => {
+            console.error("Error pushing webhook:", err);
+          });
+      }
+    });
 
     // Update stock levels
     setProducts((prev) =>

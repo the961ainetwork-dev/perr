@@ -12,14 +12,31 @@ export default function CartDrawer({ isOpen, onClose, onBeginCheckout }: CartDra
   const { cart, updateCartQuantity, removeFromCart } = useApp();
 
   const subtotal = useMemo(() => {
-    return cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+    return cart.reduce((acc, item) => {
+      const price = item.selectedPrice !== undefined ? item.selectedPrice : item.product.price;
+      return acc + price * item.quantity;
+    }, 0);
+  }, [cart]);
+
+  const shippableSubtotal = useMemo(() => {
+    return cart.reduce((acc, item) => {
+      const isGift = item.product.id === "gift_card" || item.product.tags?.includes("giftcard");
+      if (isGift) return acc;
+      const price = item.selectedPrice !== undefined ? item.selectedPrice : item.product.price;
+      return acc + price * item.quantity;
+    }, 0);
+  }, [cart]);
+
+  const hasShippableItems = useMemo(() => {
+    return cart.some(item => !(item.product.id === "gift_card" || item.product.tags?.includes("giftcard")));
   }, [cart]);
 
   // Free shipping threshold target: $45
   const FREE_SHIPPING_THRESHOLD = 45;
-  const distanceToFreeShipping = FREE_SHIPPING_THRESHOLD - subtotal;
-  const isFreeShipping = distanceToFreeShipping <= 0;
-  const shippingPercent = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
+  const distanceToFreeShipping = FREE_SHIPPING_THRESHOLD - shippableSubtotal;
+  const isFreeShipping = !hasShippableItems || distanceToFreeShipping <= 0;
+  const shippingPercent = hasShippableItems ? Math.min(100, (shippableSubtotal / FREE_SHIPPING_THRESHOLD) * 100) : 100;
+  const shippingCost = hasShippableItems ? (shippableSubtotal > 40 ? 4.99 : 8.99) : 0;
 
   if (!isOpen) return null;
 
@@ -96,61 +113,76 @@ export default function CartDrawer({ isOpen, onClose, onBeginCheckout }: CartDra
             </div>
           ) : (
             <div className="space-y-4">
-              {cart.map((item) => (
-                <div 
-                  key={item.product.id} 
-                  className="p-4 bg-white border border-editorial-charcoal/10 rounded-none flex items-center justify-between gap-4 text-left"
-                  id={`cart-item-${item.product.id}`}
-                >
-                  <img
-                    src={item.product.image}
-                    alt={item.product.name}
-                    className="w-16 h-16 object-cover border border-editorial-charcoal/10 shrink-0"
-                    referrerPolicy="no-referrer"
-                  />
-                  
-                  <div className="flex-1 space-y-1.5 min-w-0">
-                    <span className="text-[8px] font-mono uppercase tracking-widest text-[#C1121F] font-bold block leading-none">{item.product.sellerName}</span>
-                    <h5 className="font-serif text-xs font-bold text-editorial-charcoal truncate italic pr-2">{item.product.name}</h5>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs font-bold text-editorial-charcoal font-sans">${item.product.price.toFixed(2)}</span>
-                      <span className="text-[9px] text-[#1A1A1A]/40 uppercase font-mono">Vol: {item.product.size || "16 oz"}</span>
-                    </div>
-                  </div>
-
-                  {/* Quantity Actions */}
-                  <div className="flex flex-col items-end gap-2 shrink-0">
-                    <div className="flex items-center bg-editorial-gray border border-editorial-charcoal/15 rounded-none p-0.5">
-                      <button
-                        onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
-                        className="p-1 text-editorial-charcoal/50 hover:text-editorial-charcoal hover:bg-white transition-all"
-                        aria-label="Decrease quantity"
-                      >
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="w-6 text-center text-[10px] font-bold text-editorial-charcoal font-mono">
-                        {item.quantity}
-                      </span>
-                      <button
-                        onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
-                        className="p-1 text-editorial-charcoal/50 hover:text-editorial-charcoal hover:bg-white transition-all"
-                        disabled={item.quantity >= item.product.stock}
-                        aria-label="Increase quantity"
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
+              {cart.map((item) => {
+                const price = item.selectedPrice !== undefined ? item.selectedPrice : item.product.price;
+                const isGift = item.product.id === "gift_card" || item.product.tags?.includes("giftcard");
+                const uniqueKey = `${item.product.id}-${price}-${item.recipientEmail || ""}`;
+                return (
+                  <div 
+                    key={uniqueKey} 
+                    className="p-4 bg-white border border-editorial-charcoal/10 rounded-none flex items-center justify-between gap-4 text-left"
+                    id={`cart-item-${item.product.id}`}
+                  >
+                    <img
+                      src={item.product.image}
+                      alt={item.product.name}
+                      className="w-16 h-16 object-cover border border-editorial-charcoal/10 shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    
+                    <div className="flex-1 space-y-1.5 min-w-0">
+                      <span className="text-[8px] font-mono uppercase tracking-widest text-[#C1121F] font-bold block leading-none">{item.product.sellerName}</span>
+                      <h5 className="font-serif text-xs font-bold text-editorial-charcoal truncate italic pr-2">{item.product.name}</h5>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-bold text-editorial-charcoal font-sans">${price.toFixed(2)}</span>
+                        <span className="text-[9px] text-[#1A1A1A]/40 uppercase font-mono">Vol: {item.product.size || "16 oz"}</span>
+                      </div>
+                      
+                      {isGift && item.recipientEmail && (
+                        <div className="mt-1.5 text-[9px] font-mono bg-editorial-gray border border-editorial-charcoal/10 p-1.5 rounded-none space-y-0.5">
+                          <span className="text-editorial-red font-bold uppercase block text-[8px]">Digital Recipient:</span>
+                          <span className="text-editorial-charcoal truncate block font-bold">{item.recipientEmail}</span>
+                          {item.giftMessage && (
+                            <span className="block text-stone-500 italic truncate mt-0.5">"{item.giftMessage}"</span>
+                          )}
+                        </div>
+                      )}
                     </div>
 
-                    <button
-                      onClick={() => removeFromCart(item.product.id)}
-                      className="text-[#1A1A1A]/30 hover:text-[#C1121F] transition-colors p-1"
-                      title="Remove jar"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Quantity Actions */}
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <div className="flex items-center bg-editorial-gray border border-editorial-charcoal/15 rounded-none p-0.5">
+                        <button
+                          onClick={() => updateCartQuantity(item.product.id, item.quantity - 1)}
+                          className="p-1 text-editorial-charcoal/50 hover:text-editorial-charcoal hover:bg-white transition-all"
+                          aria-label="Decrease quantity"
+                        >
+                          <Minus className="w-3 h-3" />
+                        </button>
+                        <span className="w-6 text-center text-[10px] font-bold text-editorial-charcoal font-mono">
+                          {item.quantity}
+                        </span>
+                        <button
+                          onClick={() => updateCartQuantity(item.product.id, item.quantity + 1)}
+                          className="p-1 text-editorial-charcoal/50 hover:text-editorial-charcoal hover:bg-white transition-all"
+                          disabled={item.quantity >= item.product.stock}
+                          aria-label="Increase quantity"
+                        >
+                          <Plus className="w-3 h-3" />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => removeFromCart(item.product.id)}
+                        className="text-[#1A1A1A]/30 hover:text-[#C1121F] transition-colors p-1"
+                        title="Remove jar"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -166,7 +198,7 @@ export default function CartDrawer({ isOpen, onClose, onBeginCheckout }: CartDra
               <div className="flex justify-between">
                 <span>Shipping:</span>
                 <span className="font-mono font-bold text-editorial-charcoal">
-                  {isFreeShipping ? <span className="text-editorial-green font-bold">COMPLIMENTARY</span> : `$${subtotal > 40 ? "4.99" : "8.99"}`}
+                  {isFreeShipping ? <span className="text-editorial-green font-bold">COMPLIMENTARY</span> : `$${shippingCost.toFixed(2)}`}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -176,7 +208,7 @@ export default function CartDrawer({ isOpen, onClose, onBeginCheckout }: CartDra
               <div className="border-t border-editorial-charcoal/10 pt-2 flex justify-between text-xs font-bold uppercase tracking-wider">
                 <span className="font-serif font-black text-editorial-charcoal italic">Estimated Total</span>
                 <span className="font-mono font-black text-editorial-red text-base">
-                  ${(subtotal + (isFreeShipping ? 0 : (subtotal > 40 ? 4.99 : 8.99)) + subtotal * 0.08).toFixed(2)}
+                  ${(subtotal + (isFreeShipping ? 0 : shippingCost) + subtotal * 0.08).toFixed(2)}
                 </span>
               </div>
             </div>

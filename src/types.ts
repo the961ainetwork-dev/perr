@@ -62,6 +62,9 @@ export interface Recipe {
 export interface CartItem {
   product: Product;
   quantity: number;
+  recipientEmail?: string;
+  giftMessage?: string;
+  selectedPrice?: number;
 }
 
 export interface OrderItem {
@@ -70,6 +73,9 @@ export interface OrderItem {
   price: number;
   quantity: number;
   image: string;
+  recipientEmail?: string;
+  giftMessage?: string;
+  isGiftCard?: boolean;
 }
 
 export interface Order {

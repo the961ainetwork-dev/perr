@@ -65,8 +65,35 @@ export default function AdminZone() {
     reviews
   } = useApp();
 
-  // Selected sub tab: "stats" | "active-products" | "seller-approval-queue" | "orders-fulfillment" | "data-curator" | "newsletter-preview" | "infographics"
-  const [adminTab, setAdminTab] = useState<"stats" | "active-products" | "seller-approval-queue" | "orders-fulfillment" | "data-curator" | "newsletter-preview" | "infographics">("stats");
+  // Selected sub tab: "stats" | "active-products" | "seller-approval-queue" | "orders-fulfillment" | "data-curator" | "newsletter-preview" | "infographics" | "giftcard-logs"
+  const [adminTab, setAdminTab] = useState<"stats" | "active-products" | "seller-approval-queue" | "orders-fulfillment" | "data-curator" | "newsletter-preview" | "infographics" | "giftcard-logs">("stats");
+
+  // Gift card logs state from Express server webhook
+  const [giftCardLogs, setGiftCardLogs] = useState<any[]>([]);
+  const [isLoadingGiftCards, setIsLoadingGiftCards] = useState(false);
+
+  const fetchGiftCardLogs = () => {
+    setIsLoadingGiftCards(true);
+    fetch("/api/admin/gift-card-logs")
+      .then((res) => {
+        if (!res.ok) throw new Error("HTTP error " + res.status);
+        return res.json();
+      })
+      .then((data) => {
+        setGiftCardLogs(data);
+        setIsLoadingGiftCards(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching gift card logs:", err);
+        setIsLoadingGiftCards(false);
+      });
+  };
+
+  useEffect(() => {
+    if (adminTab === "giftcard-logs") {
+      fetchGiftCardLogs();
+    }
+  }, [adminTab]);
 
   // Secure Password Protection states
   const [isUnlocked, setIsUnlocked] = useState(() => localStorage.getItem("admin_unlocked") === "true");
@@ -95,7 +122,21 @@ export default function AdminZone() {
 
   // Detailed Order Viewer & Commenting state
   const [selectedDetailedOrder, setSelectedDetailedOrder] = useState<Order | null>(null);
+  const [orderModalOrder, setOrderModalOrder] = useState<Order | null>(null);
   const [orderInternalNote, setOrderInternalNote] = useState("");
+  const [orderSearchQuery, setOrderSearchQuery] = useState("");
+
+  const filteredOrders = useMemo(() => {
+    if (!orderSearchQuery.trim()) return orders;
+    const query = orderSearchQuery.toLowerCase().trim();
+    return orders.filter(
+      (o) =>
+        o.id.toLowerCase().includes(query) ||
+        o.customerName.toLowerCase().includes(query) ||
+        o.customerEmail.toLowerCase().includes(query) ||
+        o.city.toLowerCase().includes(query)
+    );
+  }, [orders, orderSearchQuery]);
 
   // Social Infographics Generator states
   const [selectedStorySource, setSelectedStorySource] = useState("instagram_feed");
@@ -420,6 +461,7 @@ export default function AdminZone() {
             { id: "active-products", label: "Stock Inventory" },
             { id: "seller-approval-queue", label: `Sellers approvals (${pendingSubmissionsCount})` },
             { id: "orders-fulfillment", label: `Orders fulfill (${orders.length})` },
+            { id: "giftcard-logs", label: "🎁 Gift Card Webhooks" },
             { id: "data-curator", label: "Data Curation & Seed" },
             { id: "newsletter-preview", label: "✉ Newsletter Preview" },
             { id: "infographics", label: "📰 Social Infographics" },
@@ -1069,9 +1111,139 @@ export default function AdminZone() {
               </span>
             </div>
 
+            {/* Search & Export Controls */}
+            {orders.length > 0 && (
+              <div className="space-y-3 bg-stone-50 border border-editorial-charcoal/10 p-3" id="admin-orders-controls">
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="order-search-input" className="text-[9px] font-mono uppercase tracking-widest text-[#1A1A1A]/50 font-extrabold block">
+                    Filter Registers / Search Orders
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="order-search-input"
+                      type="text"
+                      placeholder="Search customer name, email, order ID, city..."
+                      value={orderSearchQuery}
+                      onChange={(e) => setOrderSearchQuery(e.target.value)}
+                      className="w-full bg-white border border-editorial-charcoal/15 focus:border-[#C1121F] p-2 pr-8 text-xs font-sans rounded-none focus:outline-none transition-colors"
+                    />
+                    {orderSearchQuery && (
+                      <button
+                        onClick={() => setOrderSearchQuery("")}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 text-xs font-mono cursor-pointer"
+                        title="Clear Search"
+                      >
+                        ✕
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-editorial-charcoal/5">
+                  <span className="text-[9px] font-mono text-stone-500 uppercase">
+                    Showing {filteredOrders.length} of {orders.length} orders
+                  </span>
+                  <div className="flex flex-wrap gap-1.5 font-mono text-[9px] uppercase tracking-wider">
+                    <button
+                      onClick={() => {
+                        const headers = ["Order ID", "Customer Name", "Customer Email", "Address", "City", "Zip Code", "Total ($)", "Status", "Items Count"];
+                        const rows = filteredOrders.map(o => [
+                          o.id,
+                          `"${o.customerName.replace(/"/g, '""')}"`,
+                          o.customerEmail,
+                          `"${o.shippingAddress.replace(/"/g, '""')}"`,
+                          `"${o.city.replace(/"/g, '""')}"`,
+                          o.zipCode,
+                          o.total.toFixed(2),
+                          o.status,
+                          o.items.length
+                        ]);
+                        const csvContent = [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+                        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", url);
+                        link.setAttribute("download", `orders_report_${new Date().toISOString().split('T')[0]}.csv`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        addToast({
+                          title: "CSV Export Successful",
+                          message: `${filteredOrders.length} orders downloaded as CSV.`,
+                          type: "success"
+                        });
+                      }}
+                      disabled={filteredOrders.length === 0}
+                      className="px-2.5 py-1 bg-white hover:bg-[#C1121F] hover:text-white border border-stone-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-stone-400 transition-all font-bold cursor-pointer"
+                    >
+                      Export CSV 📥
+                    </button>
+                    <button
+                      onClick={() => {
+                        const jsonContent = JSON.stringify(filteredOrders, null, 2);
+                        const blob = new Blob([jsonContent], { type: "application/json;charset=utf-8;" });
+                        const url = URL.createObjectURL(blob);
+                        const link = document.createElement("a");
+                        link.setAttribute("href", url);
+                        link.setAttribute("download", `orders_report_${new Date().toISOString().split('T')[0]}.json`);
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        URL.revokeObjectURL(url);
+                        addToast({
+                          title: "JSON Export Successful",
+                          message: `${filteredOrders.length} orders downloaded as JSON.`,
+                          type: "success"
+                        });
+                      }}
+                      disabled={filteredOrders.length === 0}
+                      className="px-2.5 py-1 bg-white hover:bg-[#C1121F] hover:text-white border border-stone-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-stone-400 transition-all font-bold cursor-pointer"
+                    >
+                      Export JSON 📝
+                    </button>
+                    <button
+                      onClick={() => {
+                        const headers = ["Order ID", "Customer Name", "Customer Email", "Address", "City", "Zip Code", "Total", "Status", "Items Count"];
+                        const rows = filteredOrders.map(o => [
+                          o.id,
+                          o.customerName,
+                          o.customerEmail,
+                          o.shippingAddress,
+                          o.city,
+                          o.zipCode,
+                          o.total.toFixed(2),
+                          o.status,
+                          o.items.length
+                        ]);
+                        const text = [headers.join("\t"), ...rows.map(e => e.join("\t"))].join("\n");
+                        navigator.clipboard.writeText(text).then(() => {
+                          addToast({
+                            title: "Copied to Clipboard",
+                            message: `${filteredOrders.length} orders formatted for spreadsheets copied!`,
+                            type: "success"
+                          });
+                        }).catch(err => {
+                          console.error("Failed to copy: ", err);
+                        });
+                      }}
+                      disabled={filteredOrders.length === 0}
+                      className="px-2.5 py-1 bg-white hover:bg-[#C1121F] hover:text-white border border-stone-300 disabled:opacity-50 disabled:hover:bg-white disabled:hover:text-stone-400 transition-all font-bold cursor-pointer"
+                    >
+                      Copy Excel 📋
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {orders.length === 0 ? (
               <div className="py-12 text-center text-[#1A1A1A]/50 italic font-serif text-xs">
                 No active customer order registers found.
+              </div>
+            ) : filteredOrders.length === 0 ? (
+              <div className="py-12 text-center text-[#1A1A1A]/50 italic font-serif text-xs border border-dashed border-stone-200">
+                No active orders match the criteria "{orderSearchQuery}".
               </div>
             ) : (
               <div className="overflow-x-auto text-xs font-sans">
@@ -1086,7 +1258,7 @@ export default function AdminZone() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-editorial-charcoal/10 font-sans">
-                    {orders.map((o) => {
+                    {filteredOrders.map((o) => {
                       const isSelected = selectedDetailedOrder?.id === o.id;
                       return (
                         <tr 
@@ -1094,7 +1266,10 @@ export default function AdminZone() {
                           className={`cursor-pointer transition-all ${
                             isSelected ? "bg-stone-50 border-l-4 border-[#C1121F]" : "hover:bg-editorial-gray"
                           }`}
-                          onClick={() => setSelectedDetailedOrder(o)}
+                          onClick={() => {
+                            setSelectedDetailedOrder(o);
+                            setOrderModalOrder(o);
+                          }}
                         >
                           <td className="py-3 px-1 font-mono font-bold text-[#C1121F]">{o.id}</td>
                           <td className="py-3">
@@ -1136,6 +1311,7 @@ export default function AdminZone() {
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setSelectedDetailedOrder(o);
+                                setOrderModalOrder(o);
                               }}
                               className="px-2.5 py-1 text-[9px] font-mono font-extrabold bg-stone-100 hover:bg-editorial-charcoal hover:text-white border border-stone-300 uppercase transition-all cursor-pointer"
                             >
@@ -1386,6 +1562,135 @@ export default function AdminZone() {
             )}
           </div>
 
+        </div>
+      )}
+
+      {/* ORDER DETAILS MODAL POPUP */}
+      {orderModalOrder && (
+        <div className="fixed inset-0 bg-editorial-charcoal/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-in fade-in duration-300" id="order-details-modal">
+          <div className="bg-white border-4 border-editorial-charcoal p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto space-y-6 shadow-2xl rounded-none text-left animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-editorial-charcoal/20">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📋</span>
+                <h4 className="font-serif font-extrabold italic text-editorial-charcoal">Order Details: {orderModalOrder.id}</h4>
+              </div>
+              <button onClick={() => setOrderModalOrder(null)} className="text-editorial-charcoal/60 hover:text-editorial-charcoal cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 font-sans text-xs">
+              {/* Status & General Info */}
+              <div className="flex justify-between items-center bg-stone-50 border border-stone-200 p-3">
+                <div>
+                  <span className="font-mono text-[8px] uppercase tracking-wider text-stone-500 block">Status</span>
+                  <span className={`inline-block px-2 py-0.5 mt-1 text-[9px] font-mono font-bold uppercase tracking-wider border rounded-none ${
+                    orderModalOrder.status === "Completed" ? "bg-emerald-50 text-emerald-700 border-emerald-200" :
+                    orderModalOrder.status === "Shipped" ? "bg-amber-50 text-amber-700 border-amber-200" :
+                    orderModalOrder.status === "In Progress" ? "bg-blue-50 text-blue-700 border-blue-200" :
+                    orderModalOrder.status === "Cancelled" ? "bg-red-50 text-red-700 border-red-200" :
+                    "bg-stone-100 text-stone-600 border-stone-200"
+                  }`}>
+                    {orderModalOrder.status}
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="font-mono text-[8px] uppercase tracking-wider text-stone-500 block">Total Paid</span>
+                  <span className="font-mono text-sm font-bold text-editorial-red">${orderModalOrder.total.toFixed(2)}</span>
+                </div>
+              </div>
+
+              {/* Customer Information */}
+              <div className="space-y-1.5">
+                <span className="font-mono text-[9px] uppercase tracking-wider font-extrabold text-stone-500 block">Customer Profile</span>
+                <div className="bg-white p-3 border border-editorial-charcoal/10 space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-stone-500">Name:</span>
+                    <span className="font-bold text-editorial-charcoal">{orderModalOrder.customerName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-stone-500">Email:</span>
+                    <span className="font-mono text-stone-600">{orderModalOrder.customerEmail}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Shipping Address Details */}
+              <div className="space-y-1.5">
+                <span className="font-mono text-[9px] uppercase tracking-wider font-extrabold text-stone-500 block">Shipping &amp; Delivery Address</span>
+                <div className="bg-stone-50 p-3 border border-stone-250 font-serif italic text-xs leading-relaxed text-editorial-charcoal font-medium">
+                  <p>{orderModalOrder.shippingAddress}</p>
+                  <p className="not-italic font-mono text-[10px] mt-1 text-stone-600 uppercase">
+                    {orderModalOrder.city}, ZIP: {orderModalOrder.zipCode}
+                  </p>
+                </div>
+              </div>
+
+              {/* Items Purchased */}
+              <div className="space-y-1.5">
+                <span className="font-mono text-[9px] uppercase tracking-wider font-extrabold text-stone-500 block">Purchased Items</span>
+                <div className="border border-editorial-charcoal/10 overflow-hidden">
+                  <table className="w-full text-left text-[11px] border-collapse bg-white">
+                    <thead>
+                      <tr className="bg-editorial-gray border-b border-editorial-charcoal/15 text-[8px] font-mono text-stone-500 uppercase font-bold">
+                        <th className="p-2">Product Name</th>
+                        <th className="p-2 text-center">Qty</th>
+                        <th className="p-2 text-right">Price</th>
+                        <th className="p-2 text-right">Subtotal</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-stone-150">
+                      {orderModalOrder.items.map((item, idx) => (
+                        <tr key={idx} className="hover:bg-stone-50">
+                          <td className="p-2 font-serif font-bold italic text-editorial-charcoal">
+                            {item.productName}
+                            {item.isGiftCard && (
+                              <span className="block text-[8px] font-mono not-italic text-amber-600 font-bold uppercase mt-0.5">
+                                🎁 Gift Card (To: {item.recipientEmail})
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-2 text-center font-mono font-bold text-stone-600">{item.quantity}</td>
+                          <td className="p-2 text-right font-mono text-stone-500">${item.price.toFixed(2)}</td>
+                          <td className="p-2 text-right font-mono font-bold text-editorial-charcoal">${(item.price * item.quantity).toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Pricing Summary */}
+              <div className="space-y-1 bg-stone-50 p-3 border border-stone-150 text-[10.5px]">
+                <div className="flex justify-between text-stone-500">
+                  <span>Total Price of Items:</span>
+                  <span className="font-mono font-medium text-stone-700">
+                    ${orderModalOrder.items.reduce((acc, it) => acc + it.price * it.quantity, 0).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-stone-500">
+                  <span>Tax (Estimated 8%):</span>
+                  <span className="font-mono font-medium text-stone-700">
+                    ${(orderModalOrder.items.reduce((acc, it) => acc + it.price * it.quantity, 0) * 0.08).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between font-serif font-black italic border-t border-dashed border-stone-250 pt-1.5 text-xs text-editorial-charcoal">
+                  <span>Grand Total Value</span>
+                  <span className="font-mono text-xs font-black not-italic text-editorial-red">${orderModalOrder.total.toFixed(2)}</span>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="flex justify-end pt-3 border-t border-editorial-charcoal/20">
+              <button
+                onClick={() => setOrderModalOrder(null)}
+                className="px-4 py-2 bg-editorial-charcoal text-editorial-cream hover:bg-[#C1121F] text-[10px] font-mono uppercase tracking-wider font-extrabold transition-all rounded-none cursor-pointer"
+              >
+                Close Registry Record
+              </button>
+            </div>
+          </div>
         </div>
       )}
       
@@ -2658,6 +2963,109 @@ export default function AdminZone() {
             </div>
           </div>
 
+        </div>
+      )}
+
+      {/* 7. DIGITAL GIFT CARD WEBHOOK LOGS */}
+      {adminTab === "giftcard-logs" && (
+        <div className="bg-white border border-editorial-charcoal/15 p-6 space-y-6 text-left animate-in fade-in duration-200" id="giftcard-logs-section">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-editorial-charcoal/10 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-block bg-[#C1121F] text-white text-[9px] font-mono uppercase px-2 py-0.5 font-bold tracking-widest">
+                  Live REST Webhooks
+                </span>
+                <span className="text-[10px] font-mono text-stone-500 uppercase">Secure Event-Listener</span>
+              </div>
+              <h3 className="font-serif text-xl font-bold text-editorial-charcoal italic mt-1">
+                Digital Gift Card Sale Signals & Logs
+              </h3>
+              <p className="text-[#1A1A1A]/70 text-xs mt-1 max-w-xl font-sans">
+                These server-side logs capture incoming POST payloads triggered instantly upon successful digital purchases.
+              </p>
+            </div>
+            
+            <button
+              onClick={fetchGiftCardLogs}
+              disabled={isLoadingGiftCards}
+              className="px-4 py-2 bg-editorial-charcoal text-editorial-cream hover:bg-[#C1121F] disabled:bg-stone-400 text-[10px] font-mono uppercase tracking-wider font-bold transition-all rounded-none self-start"
+            >
+              {isLoadingGiftCards ? "Syncing Signals..." : "🔄 Refresh Webhook Feed"}
+            </button>
+          </div>
+
+          {isLoadingGiftCards && giftCardLogs.length === 0 ? (
+            <div className="py-12 text-center text-stone-500 font-mono text-xs">
+              Fetching records from Express brining server...
+            </div>
+          ) : giftCardLogs.length === 0 ? (
+            <div className="py-12 text-center border-2 border-dashed border-stone-200">
+              <span className="text-3xl">🎁</span>
+              <p className="text-stone-500 font-mono text-xs mt-2">No active gift card purchase signals detected in this session yet.</p>
+              <p className="text-stone-400 text-[10px] font-sans mt-1">Purchase a Digital Gift Card from the Homepage to trigger real-time webhook broadcasts.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+              {giftCardLogs.map((log: any) => (
+                <div 
+                  key={log.id} 
+                  className="bg-stone-50 border border-stone-200 rounded-none overflow-hidden hover:border-[#C1121F] transition-all flex flex-col justify-between"
+                  id={`giftcard-log-${log.id}`}
+                >
+                  <div className="p-4 space-y-4">
+                    {/* Header line */}
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-0.5">
+                        <span className="font-mono text-[9px] uppercase font-bold text-stone-400">SIGNAL ID:</span>
+                        <div className="font-mono text-[10px] font-bold text-editorial-charcoal">{log.id}</div>
+                      </div>
+                      <span className="bg-emerald-100 text-emerald-800 text-[8px] font-mono uppercase tracking-widest px-2 py-0.5 font-bold rounded-xs">
+                        Delivered ✓
+                      </span>
+                    </div>
+
+                    {/* Numeric details */}
+                    <div className="bg-white border border-stone-150 p-3 flex justify-between items-center rounded-none shadow-xs">
+                      <div>
+                        <span className="font-mono text-[8px] uppercase text-stone-400 block leading-none">VOUCHER VALUE</span>
+                        <span className="font-mono text-xl font-black text-editorial-red">${log.cardValue}.00</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="font-mono text-[8px] uppercase text-stone-400 block leading-none">ORDER REFERENCE</span>
+                        <span className="font-mono text-xs font-bold text-editorial-charcoal">{log.orderId}</span>
+                      </div>
+                    </div>
+
+                    {/* Key coordinates */}
+                    <div className="space-y-1.5 text-xs text-stone-700">
+                      <div>
+                        <span className="font-mono text-[9px] uppercase text-stone-400 block font-bold">RECIPIENT INBOX:</span>
+                        <span className="font-mono font-semibold text-editorial-charcoal block truncate">{log.recipientEmail}</span>
+                      </div>
+                      <div>
+                        <span className="font-mono text-[9px] uppercase text-stone-400 block font-bold">REDEMPTION CODE (MASKED):</span>
+                        <code className="font-mono text-[11px] font-black text-amber-600 bg-amber-50 px-1 border border-amber-100 block py-0.5 select-all mt-0.5">
+                          {log.maskedCode}
+                        </code>
+                      </div>
+                      {log.giftMessage && (
+                        <div>
+                          <span className="font-mono text-[9px] uppercase text-stone-400 block font-bold">CURATOR NOTE:</span>
+                          <span className="italic text-[11px] text-stone-600 block mt-0.5">"{log.giftMessage}"</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Footer line */}
+                  <div className="bg-stone-100 px-4 py-2 border-t border-stone-200 flex justify-between items-center text-[9px] font-mono text-stone-500">
+                    <span>⏱ {new Date(log.timestamp).toLocaleTimeString()}</span>
+                    <span>{new Date(log.timestamp).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -3,6 +3,7 @@ import { AppProvider, useApp } from "./context/AppContext";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import PicklePepperMarketplace from "./components/PicklePepperMarketplace";
+import GiftCardSection from "./components/GiftCardSection";
 import CollectionShowcase from "./components/CollectionShowcase";
 import RecipeBook from "./components/RecipeBook";
 import SellerPortal from "./components/SellerPortal";
@@ -252,6 +253,7 @@ function MainAppContent() {
                 selectedProductId={selectedProductId}
                 onClearSelectedProduct={() => setSelectedProductId(null)}
               />
+              <GiftCardSection />
             </div>
           )}
 

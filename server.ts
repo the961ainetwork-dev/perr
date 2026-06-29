@@ -12,6 +12,62 @@ async function startServer() {
 
   app.use(express.json());
 
+  // In-Memory Gift Card DB for demo and admin tracking
+  const giftCardLogs: any[] = [
+    {
+      id: "GC-LOG-1001",
+      orderId: "ORD-73921",
+      cardValue: 100,
+      maskedCode: "GC-XXXX-XXXX-B94F",
+      recipientEmail: "ferment-fanatic@gmail.com",
+      giftMessage: "To a great pickler! Enjoy these jars.",
+      timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+      secureCode: "GC-3A2F-8D1C-B94F"
+    }
+  ];
+
+  // API to fetch issued gift card log entries
+  app.get("/api/admin/gift-card-logs", (req, res) => {
+    res.json(giftCardLogs);
+  });
+
+  // API representing a webhook receiver for successful gift card sales
+  app.post("/api/webhooks/gift-card-sale", (req, res) => {
+    const { orderId, cardValue, recipientEmail, giftMessage } = req.body;
+    
+    if (!orderId || !cardValue || !recipientEmail) {
+      return res.status(400).json({ error: "Missing required webhook payload fields: orderId, cardValue, recipientEmail" });
+    }
+
+    // Generate secure randomized code
+    const seg1 = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const seg2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const seg3 = Math.random().toString(36).substring(2, 6).toUpperCase();
+    const secureCode = `GC-${seg1}-${seg2}-${seg3}`;
+    const maskedCode = `GC-XXXX-XXXX-${seg3}`;
+
+    const newLog = {
+      id: `GC-LOG-${1000 + giftCardLogs.length + 1}`,
+      orderId,
+      cardValue: Number(cardValue),
+      maskedCode,
+      recipientEmail,
+      giftMessage: giftMessage || "",
+      timestamp: new Date().toISOString(),
+      secureCode
+    };
+
+    giftCardLogs.unshift(newLog);
+
+    res.json({
+      success: true,
+      message: "Webhook event captured successfully. Gift card code dispatched.",
+      secureCode,
+      maskedCode,
+      logEntry: newLog
+    });
+  });
+
   // API Route for the Lacto-Fermentation Advisor
   app.post("/api/gemini/advisor", async (req, res) => {
     try {

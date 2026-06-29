@@ -34,10 +34,26 @@ export default function CheckoutModal({ isOpen, onClose, onOrderCompleted }: Che
   const [showEmailPreview, setShowEmailPreview] = useState(false);
 
   const subtotal = useMemo(() => {
-    return cart.reduce((acc, item) => acc + item.product.price * item.quantity, 0);
+    return cart.reduce((acc, item) => {
+      const price = item.selectedPrice !== undefined ? item.selectedPrice : item.product.price;
+      return acc + price * item.quantity;
+    }, 0);
   }, [cart]);
 
-  const shippingCost = subtotal > 45 ? 0 : (subtotal > 40 ? 4.99 : 8.99);
+  const shippableSubtotal = useMemo(() => {
+    return cart.reduce((acc, item) => {
+      const isGift = item.product.id === "gift_card" || item.product.tags?.includes("giftcard");
+      if (isGift) return acc;
+      const price = item.selectedPrice !== undefined ? item.selectedPrice : item.product.price;
+      return acc + price * item.quantity;
+    }, 0);
+  }, [cart]);
+
+  const hasShippableItems = useMemo(() => {
+    return cart.some(item => !(item.product.id === "gift_card" || item.product.tags?.includes("giftcard")));
+  }, [cart]);
+
+  const shippingCost = hasShippableItems ? (shippableSubtotal > 45 ? 0 : (shippableSubtotal > 40 ? 4.99 : 8.99)) : 0;
   const taxCost = parseFloat((subtotal * 0.08).toFixed(2));
   const orderTotal = parseFloat((subtotal + shippingCost + taxCost).toFixed(2));
 
@@ -388,6 +404,45 @@ export default function CheckoutModal({ isOpen, onClose, onOrderCompleted }: Che
                   </button>
                 </div>
               </div>
+
+              {/* Check if any items are gift cards */}
+              {placedOrderDetails.items?.some((item: any) => item.isGiftCard) && (
+                <div className="bg-amber-50 border border-amber-200 p-4 text-left max-w-md mx-auto space-y-3 relative overflow-hidden" id="gift-card-dispatch-banner">
+                  <span className="absolute top-2.5 right-2.5 flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                  </span>
+                  
+                  <div className="flex gap-2.5">
+                    <span className="text-lg">🎁</span>
+                    <div className="space-y-1 w-full">
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-amber-800 block">Digital Gift Card Dispatched</span>
+                      <p className="text-amber-950 font-sans text-[11px] leading-relaxed">
+                        Your transaction authorization succeeded. Secure digital code(s) have been generated and dispatched to the recipient inbox(es):
+                      </p>
+                      <div className="space-y-1.5 mt-2.5">
+                        {placedOrderDetails.items
+                          .filter((item: any) => item.isGiftCard)
+                          .map((item: any, idx: number) => {
+                            const uniquePart = Math.random().toString(36).substring(2, 6).toUpperCase();
+                            const generatedCode = `GC-REDEEM-A8E2-${uniquePart}`;
+                            return (
+                              <div key={idx} className="bg-white border border-amber-250 p-2 text-[10px] font-mono rounded-none">
+                                <div className="flex justify-between font-bold text-amber-900">
+                                  <span>Value: ${item.price} USD</span>
+                                  <span className="text-editorial-green font-bold">Issued ✓</span>
+                                </div>
+                                <div className="mt-0.5"><span className="text-stone-400">Recipient:</span> {item.recipientEmail}</div>
+                                <div className="mt-0.5"><span className="text-stone-400">Secure Code:</span> <code className="bg-stone-100 px-1 text-editorial-red font-bold">{generatedCode}</code></div>
+                                {item.giftMessage && <div className="mt-0.5 text-stone-500 italic">"{item.giftMessage}"</div>}
+                              </div>
+                            );
+                          })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Expandable Simulated Email Box */}
               {showEmailPreview && (

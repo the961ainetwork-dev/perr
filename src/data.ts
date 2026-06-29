@@ -131,6 +131,22 @@ export const INITIAL_PRODUCTS: Product[] = [
     tags: ["Mexican Style", "Carrots", "Crunchy", "Colorful"],
     size: "16 oz Jar",
     isSeasonal: true
+  },
+  {
+    id: "gift_card",
+    name: "Digital Gift Card",
+    description: "Give the gift of premium Lebanese small-batch dills, sweet and spicy peppers, and probiotic-rich ferments. Perfect for any home chef or fermentation enthusiast.",
+    price: 50.00,
+    category: "starter",
+    image: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=800",
+    spiceLevel: "None",
+    stock: 9999,
+    rating: 5.0,
+    reviewsCount: 15,
+    ingredients: ["Gourmet Hospitality", "Fermentation Passion", "Good Taste"],
+    sellerName: "Hamod & Har Official",
+    tags: ["giftcard", "digital"],
+    size: "Digital Delivery"
   }
 ];
 
