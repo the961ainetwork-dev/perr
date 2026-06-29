@@ -152,10 +152,10 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="space-y-6">
         
-        {/* LEFT COLUMN: THE CENTRAL PRODUCTS INDEX TABLE */}
-        <div className="lg:col-span-8 space-y-6">
+        {/* THE CENTRAL PRODUCTS INDEX TABLE (FULL WIDTH) */}
+        <div className="w-full space-y-6">
           <div className="bg-white border-2 border-editorial-charcoal/15 shadow-sm overflow-hidden">
             <div className="p-4 bg-editorial-charcoal text-editorial-cream border-b border-editorial-charcoal flex justify-between items-center">
               <span className="font-mono text-[10px] uppercase tracking-widest font-bold">Specimens Catalog Registry</span>
@@ -309,28 +309,33 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
             </button>
           </div>
         </div>
+      </div>
 
-        {/* RIGHT COLUMN: ORDER SUMMARY & PAYMENT INLINE BLOCK */}
-        <div className="lg:col-span-4 space-y-6" id="order-execution-block">
-          
-          {/* LIVE ORDER SUMMARY */}
-          <div className="bg-white border-2 border-editorial-charcoal shadow-md p-5 space-y-5">
-            <div className="pb-3 border-b border-editorial-charcoal/20 flex justify-between items-center">
-              <div className="flex items-center gap-1.5">
-                <span className="text-base">📋</span>
-                <h3 className="font-serif font-extrabold italic text-sm text-editorial-charcoal">Order Exec Summary</h3>
-              </div>
-              <span className="font-mono text-[9px] uppercase tracking-wider text-stone-500">
-                {cart.reduce((sum, item) => sum + item.quantity, 0)} Items
-              </span>
-            </div>
+      {/* SECURE CHECKOUT & ORDER SUMMARY PANEL AT THE END OF THE PAGE */}
+      {cart.length > 0 && (
+        <div className="mt-12 pt-8 border-t-2 border-editorial-charcoal/20 space-y-6 animate-in fade-in duration-200" id="order-execution-block">
+          <div className="text-left space-y-1">
+            <h3 className="font-serif text-xl sm:text-2xl font-black italic text-editorial-charcoal">
+              🏺 Order Execution & Barter Summary
+            </h3>
+            <p className="text-xs text-editorial-charcoal/60 font-serif italic">
+              Review your selected specimen crops in the temporary registry and complete secure dispatch info.
+            </p>
+          </div>
 
-            {cart.length === 0 ? (
-              <div className="py-8 text-center space-y-2">
-                <p className="text-xs text-stone-400 italic font-serif">Your shopping cart is currently empty.</p>
-                <p className="text-[9px] font-mono text-stone-450 uppercase tracking-widest">Select spec crops from the left registry to start</p>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+            {/* LIVE ORDER SUMMARY */}
+            <div className="lg:col-span-5 bg-white border-2 border-editorial-charcoal shadow-md p-5 space-y-5">
+              <div className="pb-3 border-b border-editorial-charcoal/20 flex justify-between items-center">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base">📋</span>
+                  <h3 className="font-serif font-extrabold italic text-sm text-editorial-charcoal">Order Exec Summary</h3>
+                </div>
+                <span className="font-mono text-[9px] uppercase tracking-wider text-stone-500">
+                  {cart.reduce((sum, item) => sum + item.quantity, 0)} Items
+                </span>
               </div>
-            ) : (
+
               <div className="space-y-4">
                 {/* Cart Items List */}
                 <div className="divide-y divide-stone-100 max-h-[220px] overflow-y-auto pr-1">
@@ -413,12 +418,10 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                   </button>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
 
-          {/* SECURE DIRECT PAYMENT & EXECUTE FORM */}
-          {cart.length > 0 && (
-            <div className="bg-[#1C2D18] text-white border-2 border-editorial-charcoal shadow-md p-5 space-y-4 text-left">
+            {/* SECURE DIRECT PAYMENT & EXECUTE FORM */}
+            <div className="lg:col-span-7 bg-[#1C2D18] text-white border-2 border-editorial-charcoal shadow-md p-5 space-y-4 text-left">
               <div className="pb-2 border-b border-white/10 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-400" />
                 <h3 className="font-serif font-extrabold italic text-sm text-white">Execute Secure Payment</h3>
@@ -550,9 +553,9 @@ export default function Catalogue({ onOpenCart, onSetTab }: CatalogueProps) {
                 </div>
               </form>
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* MODAL 1: CONTINUE SHOPPING FLOW POPUP */}
       <AnimatePresence>
