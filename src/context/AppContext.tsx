@@ -56,6 +56,8 @@ interface AppContextType {
   updateOrderStatus: (id: string, status: Order["status"]) => void;
   deleteProduct: (id: string) => void;
   updateProductStock: (id: string, newStock: number) => void;
+  createProduct: (product: Product) => void;
+  updateProductDetails: (id: string, updatedFields: Partial<Product>) => void;
   wishlist: string[];
   toggleWishlist: (productId: string) => void;
   headerSearchQuery: string;
@@ -460,6 +462,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, stock: newStock } : p)));
   };
 
+  const createProduct = (product: Product) => {
+    setProducts((prev) => [product, ...prev]);
+  };
+
+  const updateProductDetails = (id: string, updatedFields: Partial<Product>) => {
+    setProducts((prev) => prev.map((p) => (p.id === id ? { ...p, ...updatedFields } : p)));
+  };
+
   const importDropshipProduct = (newProduct: Product) => {
     setProducts((prev) => [newProduct, ...prev]);
   };
@@ -579,6 +589,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         updateOrderStatus,
         deleteProduct,
         updateProductStock,
+        createProduct,
+        updateProductDetails,
         wishlist,
         toggleWishlist,
         headerSearchQuery,
