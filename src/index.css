@@ -1,17 +1,46 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-serif: "Playfair Display", "Georgia", serif;
-  --font-sans: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: "Montserrat", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
-  /* Editorial Theme Palette */
+  /* Editorial Theme Palette with Reddish Green Background replace */
   --color-editorial-cream: #FAF9F6;
-  --color-editorial-charcoal: #1A1A1A;
+  --color-editorial-charcoal: #1C2D18; /* Reddish Green / Dark Pickle Theme */
   --color-editorial-red: #C1121F;
   --color-editorial-green: #1B4332;
   --color-editorial-gray: #F0EFEC;
+
+  /* Black & Dark Stone Overrides to Reddish Green */
+  --color-black: #121F10;
+  --color-stone-950: #0F1A0E;
+  --color-stone-900: #1C2D18;
+  --color-stone-850: #253C20;
+  --color-stone-800: #2E4B28;
+
+  /* Grey text colors turned white */
+  --color-stone-300: #ffffff;
+  --color-stone-400: #ffffff;
+  --color-stone-500: #ffffff;
+  --color-stone-600: #ffffff;
+  --color-stone-700: #ffffff;
+  --color-gray-300: #ffffff;
+  --color-gray-400: #ffffff;
+  --color-gray-500: #ffffff;
+  --color-gray-600: #ffffff;
+  --color-gray-700: #ffffff;
+  --color-neutral-300: #ffffff;
+  --color-neutral-400: #ffffff;
+  --color-neutral-500: #ffffff;
+  --color-neutral-600: #ffffff;
+  --color-neutral-700: #ffffff;
+  --color-zinc-300: #ffffff;
+  --color-zinc-400: #ffffff;
+  --color-zinc-500: #ffffff;
+  --color-zinc-600: #ffffff;
+  --color-zinc-700: #ffffff;
 }
 
 body {
