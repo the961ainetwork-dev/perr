@@ -36,6 +36,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
 
   const tabs = [
     { id: "market", label: "Marketplace", icon: Store, role: ["customer", "seller", "admin"] },
+    { id: "catalogue", label: "Catalogue", icon: BookOpen, role: ["customer", "seller", "admin"] },
     { id: "showcase", label: "Collection", icon: Sparkles, role: ["customer", "seller", "admin"] },
     { id: "recipes", label: "Artisan Recipes", icon: ChefHat, role: ["customer", "seller", "admin"] },
     { id: "dropship", label: "Dropship Hub", icon: Coins, role: ["customer", "seller", "admin"] },

@@ -12,6 +12,7 @@ import OrderTracker from "./components/OrderTracker";
 import AdminZone from "./components/AdminZone";
 import AboutUs from "./components/AboutUs";
 import OurPhilosophy from "./components/OurPhilosophy";
+import Catalogue from "./components/Catalogue";
 import CartDrawer from "./components/CartDrawer";
 import CheckoutModal from "./components/CheckoutModal";
 import FAQModal from "./components/FAQModal";
@@ -177,6 +178,11 @@ function MainAppContent() {
         label: "Dropship Hub",
         isCurrent: true
       });
+    } else if (activeTab === "catalogue") {
+      items.push({
+        label: "Catalogue",
+        isCurrent: true
+      });
     } else if (activeTab === "seller") {
       items.push({
         label: "Seller Kitchen",
@@ -299,6 +305,16 @@ function MainAppContent() {
           {activeTab === "tracker" && (
             <div className="py-8 animate-in fade-in duration-200">
               <OrderTracker />
+            </div>
+          )}
+
+          {/* CATALOGUE TAB */}
+          {activeTab === "catalogue" && (
+            <div className="py-8 animate-in fade-in duration-200">
+              <Catalogue 
+                onOpenCart={() => setIsCartOpen(true)}
+                onSetTab={setActiveTab}
+              />
             </div>
           )}
 
