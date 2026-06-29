@@ -1043,7 +1043,7 @@ export default function PicklePepperMarketplace({
                     </span>
                     <h3 
                       onClick={() => { setSelectedProduct(p); setModalTab("details"); }}
-                      className="font-serif text-base font-bold text-editorial-charcoal hover:text-editorial-red leading-tight line-clamp-1 cursor-pointer italic"
+                      className="font-serif text-lg font-bold text-editorial-charcoal hover:text-editorial-red leading-tight line-clamp-1 cursor-pointer"
                     >
                       {p.name}
                     </h3>
@@ -1474,7 +1474,7 @@ export default function PicklePepperMarketplace({
                 <div className="space-y-4 flex-1">
                   <div>
                     <span className="text-[9px] font-mono uppercase tracking-widest text-editorial-red font-bold">{selectedProduct.category} Collection</span>
-                    <h2 className="font-serif text-2xl font-black text-editorial-charcoal mt-1 italic">{selectedProduct.name}</h2>
+                    <h2 className="font-serif text-[26px] font-black text-editorial-charcoal mt-1">{selectedProduct.name}</h2>
                     <span className="text-xs text-editorial-charcoal/50 block mt-1">
                       {selectedProduct.isDropshipped ? (
                         <>Import &amp; curation direct from farm crop: <span className="text-[#C1121F] font-black">{selectedProduct.supplierName}</span></>

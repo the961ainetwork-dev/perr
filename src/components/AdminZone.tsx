@@ -1283,7 +1283,7 @@ export default function AdminZone() {
                   <h1 className={templateConfig.headerTitleClass}>
                     {newsletterTemplate === "spicy" 
                       ? "The Chili Head Firebrand" 
-                      : "The Pickle & Pepper Gazette"}
+                      : "The HamodWHarr Gazette"}
                   </h1>
                   <div className="flex justify-between items-center text-[8.5px] font-mono text-stone-400 uppercase pt-2 tracking-wider">
                     <span>Issue #34</span>

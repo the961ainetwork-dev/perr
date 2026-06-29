@@ -13,6 +13,7 @@ export interface Product {
   sellerName: string;
   tags: string[];
   size?: string; // e.g. "16 oz Jar" or "4 oz Packet"
+  secondaryImage?: string;
   isDropshipped?: boolean;
   wholesaleCost?: number;
   supplierName?: string;

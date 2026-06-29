@@ -149,7 +149,7 @@ export default function SellerPortal() {
               The Artisan Kitchen Portal
             </h2>
             <p className="text-xs text-[#1A1A1A]/70 leading-relaxed font-sans">
-              Are you a local crop grower, grandmother preserving garlic brines, or a master of premium peppery mashes? Host your small batches on Brine &amp; Bite!
+              Are you a local crop grower, grandmother preserving garlic brines, or a master of premium peppery mashes? Host your small batches on HamodWHarr!
             </p>
           </div>
 

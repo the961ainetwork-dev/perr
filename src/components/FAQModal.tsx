@@ -61,7 +61,7 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
       id: "tech-sim",
       category: "technical",
       question: "Is this payment framework real? Am I going to be charged money?",
-      answer: "Absolutely not. Brine & Bite is a fully fledged administrative sandbox and culinary simulation kitchen. No active charges are placed on any credit card credentials you input here, and courier delivery tracking panels represent mock regional logistics data populated locally in your browser memory.",
+      answer: "Absolutely not. HamodWHarr is a fully fledged administrative sandbox and culinary simulation kitchen. No active charges are placed on any credit card credentials you input here, and courier delivery tracking panels represent mock regional logistics data populated locally in your browser memory.",
     },
   ];
 
@@ -209,7 +209,7 @@ export default function FAQModal({ isOpen, onClose }: FAQModalProps) {
             </p>
           </div>
           <a
-            href="mailto:support@brinebiteexample.com"
+            href="mailto:support@hamodwharr.com"
             className="shrink-0 bg-editorial-charcoal text-editorial-cream font-mono text-[9px] uppercase tracking-wider font-bold py-2.5 px-4 text-center hover:bg-[#C1121F] transition-all"
           >
             ARTISAN SUPPORT DESK

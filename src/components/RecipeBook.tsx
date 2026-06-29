@@ -1106,7 +1106,7 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
                         </div>
                       </div>
                       
-                      <h4 className="font-serif text-sm font-black text-editorial-charcoal group-hover:text-editorial-red transition-colors italic leading-snug line-clamp-1">
+                      <h4 className="font-serif text-base font-black text-editorial-charcoal group-hover:text-editorial-red transition-colors leading-snug line-clamp-1">
                         {rec.title}
                       </h4>
                       
@@ -1302,7 +1302,7 @@ export default function RecipeBook({ onSetTab, selectedRecipeId, onClearSelected
                           <span className="text-[#968472] text-[9px] font-extrabold uppercase tracking-wide">★ NEW</span>
                         )}
                       </div>
-                      <h3 className="font-serif text-base font-bold text-editorial-charcoal group-hover:text-editorial-red transition-colors line-clamp-1 italic">
+                      <h3 className="font-serif text-lg font-bold text-editorial-charcoal group-hover:text-editorial-red transition-colors line-clamp-1">
                         {rec.title}
                       </h3>
                       <p className="text-[#1A1A1A]/70 text-xs line-clamp-2 leading-relaxed font-sans">

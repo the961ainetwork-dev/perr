@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useApp } from "../context/AppContext";
-import { ShoppingCart, ChefHat, Store, Shield, User, Compass, HelpCircle, Search, X, Coins } from "lucide-react";
+import { ShoppingCart, ChefHat, Store, Shield, User, Compass, HelpCircle, Search, X, Coins, Sparkles } from "lucide-react";
 
 interface HeaderProps {
   activeTab: string;
@@ -31,6 +31,7 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
 
   const tabs = [
     { id: "market", label: "Marketplace", icon: Store, role: ["customer", "seller", "admin"] },
+    { id: "showcase", label: "Collection", icon: Sparkles, role: ["customer", "seller", "admin"] },
     { id: "recipes", label: "Artisan Recipes", icon: ChefHat, role: ["customer", "seller", "admin"] },
     { id: "dropship", label: "Dropship Hub", icon: Coins, role: ["customer", "seller", "admin"] },
     { id: "seller", label: "Seller Kitchen", icon: User, role: ["customer", "seller"] },
@@ -88,14 +89,14 @@ export default function Header({ activeTab, setActiveTab, openCart, onSelectProd
           id="branding-logo"
         >
           <div className="font-serif text-2xl font-black italic tracking-tighter text-editorial-charcoal group-hover:text-editorial-red transition-colors">
-            FERMENT.
+            HAMOD.
           </div>
           <div className="border-l border-editorial-charcoal/20 pl-3">
             <span className="font-serif text-sm font-bold tracking-tight block leading-none text-editorial-charcoal">
-              Brine &amp; Bite
+              HamodWHarr
             </span>
             <span className="text-[8px] font-mono uppercase tracking-widest text-[#C1121F] font-semibold block mt-0.5">
-              Vinegar &amp; Heat
+              Sour &amp; Spicy Heat
             </span>
           </div>
         </div>

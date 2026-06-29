@@ -3,6 +3,7 @@ import { AppProvider, useApp } from "./context/AppContext";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import PicklePepperMarketplace from "./components/PicklePepperMarketplace";
+import CollectionShowcase from "./components/CollectionShowcase";
 import RecipeBook from "./components/RecipeBook";
 import SellerPortal from "./components/SellerPortal";
 import MerchantHub from "./components/MerchantHub";
@@ -12,11 +13,12 @@ import CartDrawer from "./components/CartDrawer";
 import CheckoutModal from "./components/CheckoutModal";
 import FAQModal from "./components/FAQModal";
 import ToastContainer from "./components/ToastNotification";
+import Breadcrumbs, { BreadcrumbItem } from "./components/Breadcrumbs";
 import { ArrowUp, Compass, Flame, Leaf, Truck, Instagram, Twitter, Pin, Mail, Check } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
 function MainAppContent() {
-  const { userRole, addToast } = useApp();
+  const { userRole, addToast, recipes } = useApp();
   
   // Newsletter Subscription State
   const [newsletterEmail, setNewsletterEmail] = useState("");
@@ -110,6 +112,88 @@ function MainAppContent() {
     setSelectedRecipeId(null);
   };
 
+  // Dynamic Breadcrumb Items Builder
+  const getBreadcrumbs = (): BreadcrumbItem[] => {
+    const items: BreadcrumbItem[] = [
+      { 
+        label: "Home", 
+        onClick: () => { 
+          setActiveTab("market"); 
+          setHeroCategoryFilter("all"); 
+          setSelectedRecipeId(null); 
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } 
+      }
+    ];
+
+    if (activeTab === "market") {
+      items.push({ 
+        label: "Marketplace", 
+        onClick: () => { 
+          setHeroCategoryFilter("all"); 
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        },
+        isCurrent: heroCategoryFilter === "all"
+      });
+
+      if (heroCategoryFilter !== "all") {
+        items.push({
+          label: heroCategoryFilter === "pickle" ? "Artisanal Pickles" : "Spicy Peppers",
+          onClick: () => {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          },
+          isCurrent: true
+        });
+      }
+    } else if (activeTab === "showcase") {
+      items.push({
+        label: "Collection Showcase",
+        isCurrent: true
+      });
+    } else if (activeTab === "recipes") {
+      items.push({
+        label: "Artisan Recipes",
+        onClick: () => {
+          setSelectedRecipeId(null);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        },
+        isCurrent: !selectedRecipeId
+      });
+
+      if (selectedRecipeId) {
+        const matchingRecipe = recipes.find(r => r.id === selectedRecipeId);
+        if (matchingRecipe) {
+          items.push({
+            label: matchingRecipe.title,
+            isCurrent: true
+          });
+        }
+      }
+    } else if (activeTab === "dropship") {
+      items.push({
+        label: "Dropship Hub",
+        isCurrent: true
+      });
+    } else if (activeTab === "seller") {
+      items.push({
+        label: "Seller Kitchen",
+        isCurrent: true
+      });
+    } else if (activeTab === "tracker") {
+      items.push({
+        label: "Track Orders",
+        isCurrent: true
+      });
+    } else if (activeTab === "admin") {
+      items.push({
+        label: "Admin Kitchen",
+        isCurrent: true
+      });
+    }
+
+    return items;
+  };
+
   return (
     <div className="min-h-screen bg-stone-50 flex flex-col justify-between font-sans text-stone-805 antialiased">
       <div>
@@ -138,6 +222,9 @@ function MainAppContent() {
         {/* Dynamic Display Panels */}
         <main className="grow">
           
+          {/* Central Breadcrumbs */}
+          <Breadcrumbs items={getBreadcrumbs()} />
+          
           {/* 1. MARKETPLACE TAB */}
           {activeTab === "market" && (
             <div className="animate-in fade-in duration-205">
@@ -153,6 +240,13 @@ function MainAppContent() {
                 selectedProductId={selectedProductId}
                 onClearSelectedProduct={() => setSelectedProductId(null)}
               />
+            </div>
+          )}
+
+          {/* COLLECTION SHOWCASE TAB */}
+          {activeTab === "showcase" && (
+            <div className="animate-in fade-in duration-200">
+              <CollectionShowcase onOpenCart={() => setIsCartOpen(true)} />
             </div>
           )}
 
@@ -340,6 +434,64 @@ function MainAppContent() {
                   We've registered <strong className="text-stone-200">{newsletterEmail}</strong> with our 
                   <span className="text-amber-400"> {newsletterPreference === "both" ? "Pickles & Peppers" : newsletterPreference === "pickle" ? "Pickles-Only" : "Peppers-Only"}</span> preference digests. Look out for our weekly guide soon!
                 </p>
+
+                {/* Social Media Sharing Panel */}
+                <div className="pt-2.5 border-t border-stone-800 space-y-2" id="newsletter-social-share-panel">
+                  <span className="text-[9px] font-mono uppercase text-stone-500 tracking-wider block font-bold">Share subscription status:</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <a
+                      href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                        `I just subscribed to the HamodWHarr Weekly Dispatch! Can't wait for artisanal pickling & pepper recipes! 🌶️🏺 #hamodwharr`
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-stone-800/80 hover:bg-stone-700 hover:text-white text-[9.5px] font-mono uppercase tracking-wider font-bold text-stone-300 py-1.5 px-2.5 transition-all"
+                      title="Share subscription on X / Twitter"
+                      id="share-twitter-btn"
+                    >
+                      <Twitter className="w-3 h-3 text-sky-400" />
+                      <span>X / Twitter</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        addToast({
+                          message: "Instagram subscription badge image link copied! Share to your feeds or stories 📸",
+                          type: "info"
+                        });
+                        try {
+                          navigator.clipboard.writeText("https://hamodwharr-newsletter-badge.png");
+                        } catch (err) {}
+                      }}
+                      className="inline-flex items-center gap-1.5 bg-stone-800/80 hover:bg-stone-700 hover:text-white text-[9.5px] font-mono uppercase tracking-wider font-bold text-stone-300 py-1.5 px-2.5 transition-all text-left cursor-pointer border-none"
+                      title="Copy subscription badge for Instagram"
+                      id="share-instagram-btn"
+                    >
+                      <Instagram className="w-3 h-3 text-pink-500" />
+                      <span>Instagram</span>
+                    </button>
+
+                    <a
+                      href={`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(
+                        "https://hamodwharr-newsletter"
+                      )}&media=${encodeURIComponent(
+                        "https://images.unsplash.com/photo-1587486913049-53fc88980cfc?q=80&w=600&auto=format&fit=crop"
+                      )}&description=${encodeURIComponent(
+                        "I just subscribed to the HamodWHarr Weekly Dispatch! Artisanal pickling, small-batch fermentation recipes, & spicy peppers."
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 bg-stone-800/80 hover:bg-stone-700 hover:text-white text-[9.5px] font-mono uppercase tracking-wider font-bold text-stone-300 py-1.5 px-2.5 transition-all"
+                      title="Pin your subscription badge"
+                      id="share-pinterest-btn"
+                    >
+                      <Pin className="w-3 h-3 text-red-500" />
+                      <span>Pinterest</span>
+                    </a>
+                  </div>
+                </div>
+
                 <button
                   type="button"
                   onClick={() => {
@@ -362,7 +514,7 @@ function MainAppContent() {
             <div className="flex items-center gap-2 select-none">
               <span className="text-2xl">🌶️</span>
               <span className="font-serif text-base font-bold text-stone-100 tracking-tight">
-                Brine &amp; Bite
+                HamodWHarr
               </span>
             </div>
             <p className="text-xs leading-relaxed text-stone-400 font-sans">
@@ -412,7 +564,7 @@ function MainAppContent() {
             <div className="flex items-center gap-2 pt-1">
               <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500 mr-1 select-none">Preserve feeds:</span>
               <a
-                href="https://instagram.com/brineandbite"
+                href="https://instagram.com/hamodwharr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-7 h-7 rounded-none border border-stone-800 flex items-center justify-center text-stone-400 hover:text-amber-400 hover:border-amber-400/50 transition-all bg-stone-900 shadow-2xs"
@@ -421,7 +573,7 @@ function MainAppContent() {
                 <Instagram className="w-3.5 h-3.5" />
               </a>
               <a
-                href="https://twitter.com/brineandbite"
+                href="https://twitter.com/hamodwharr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-7 h-7 rounded-none border border-stone-800 flex items-center justify-center text-stone-400 hover:text-amber-400 hover:border-amber-400/50 transition-all bg-stone-900 shadow-2xs"
@@ -430,7 +582,7 @@ function MainAppContent() {
                 <Twitter className="w-3.5 h-3.5" />
               </a>
               <a
-                href="https://pinterest.com/brineandbite"
+                href="https://pinterest.com/hamodwharr"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-7 h-7 rounded-none border border-stone-800 flex items-center justify-center text-stone-400 hover:text-amber-400 hover:border-amber-400/50 transition-all bg-stone-900 shadow-2xs"
@@ -440,7 +592,7 @@ function MainAppContent() {
               </a>
             </div>
             <div className="text-[10px] text-stone-504 font-mono pt-1">
-              © 2026 Brine &amp; Bite Corporates. Made with pride by local pickleheads.
+              © 2026 HamodWHarr Corporates. Made with pride by local pickleheads.
             </div>
           </div>
 

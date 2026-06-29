@@ -20,26 +20,200 @@ body {
   font-family: var(--font-sans);
 }
 
+/* Force all text elements, icons, and fonts to render as non-italic per user request */
+body, html, *, .italic, em, i {
+  font-style: normal !important;
+}
+
 @media print {
-  /* Hide typical interactive page elements */
-  header, footer, nav, button, .no-print, #app-header, #app-footer, .cart-drawer {
-    display: none !important;
+  /* 1. Page Margin & Sizing Configuration */
+  @page {
+    size: letter portrait;
+    margin: 1.5cm;
   }
-  
-  /* Reset background and text colors to black & white printable standards */
+
+  /* 2. Global Print Standards (Black & White, Standard Colors Reset) */
+  * {
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    -webkit-print-color-adjust: exact !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
   body {
     background-color: #ffffff !important;
     background-image: none !important;
-    color: #000000 !important;
+    color: #1a1a1a !important;
     padding: 0 !important;
     margin: 0 !important;
+    font-size: 11pt !important;
+    line-height: 1.4 !important;
   }
 
-  /* Reset container widths and remove absolute margins to avoid truncations */
-  main, .max-w-7xl, #recipe-book-zone {
+  /* Container width & alignment resets */
+  main, 
+  .max-w-7xl, 
+  #recipe-book-zone,
+  #product-grid {
     max-width: 100% !important;
+    width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
     border: none !important;
+    background: transparent !important;
+  }
+
+  /* 3. Hide all extraneous, non-printable & interactive screen clutter */
+  header,
+  footer,
+  nav,
+  button,
+  input,
+  select,
+  textarea,
+  iframe,
+  [role="dialog"] > button,
+  .no-print,
+  .print\:hidden,
+  #app-header,
+  #app-footer,
+  #toast-container,
+  .toast-notification,
+  .cart-drawer,
+  .wishlist-drawer,
+  #sourcing-selector-bar,
+  #newsletter-signup-form,
+  #newsletter-social-share-panel,
+  #email-simulation-banner,
+  #email-inbox-preview,
+  #finish-checkout-btn,
+  #submit-payment-btn,
+  #close-product-modal,
+  #close-checkout-modal,
+  #product-grid-skeleton,
+  .modal-close-btns,
+  .action-buttons-bar,
+  .feedback-form-container,
+  #seasonal-priority-alert,
+  .interactive-sliders,
+  #print-recipe-btn,
+  #toggle-fav-detail-btn,
+  #toggle-fav-btn {
+    display: none !important;
+  }
+
+  /* 4. Formatting Modal Overlays into Flat Document Layouts */
+  /* Make fixed modal wrappers display inline and statically within the flow for printing */
+  .fixed.inset-0 {
+    position: static !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+    display: block !important;
+    overflow: visible !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    z-index: auto !important;
+  }
+
+  /* Modal contents behave like flat, borderless high-contrast documents */
+  #product-modal, 
+  #checkout-modal {
+    position: static !important;
+    max-height: none !important;
+    height: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    display: block !important;
+    overflow: visible !important;
+  }
+
+  /* If a modal is open, we want to hide the rest of the main webpage so it prints only the active invoice/specs sheet */
+  body:has(#checkout-modal) main,
+  body:has(#product-modal) main {
+    display: none !important;
+  }
+
+  /* 5. Clean Grid/Flex Reflows for the Marketplace Main Catalog */
+  #product-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 2cm !important;
+    page-break-before: auto !important;
+  }
+
+  /* Prevent card clipping across page ends */
+  #product-grid > div,
+  .recipe-card-element,
+  .printable-card-unit {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    border: 1px solid #1a1a1a !important;
+    background: #ffffff !important;
+    padding: 1rem !important;
+  }
+
+  /* Keep images proportional & clean for black-and-white printouts */
+  img {
+    filter: grayscale(100%) !important;
+    max-height: 150px !important;
+    width: auto !important;
+    margin: 0 auto !important;
+    object-fit: cover !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* 6. Typography adjustments for highly crisp print readability */
+  h1, h2, h3, h4, h5, h6 {
+    color: #000000 !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    font-weight: 800 !important;
+  }
+
+  p, li, span, td, th {
+    color: #222222 !important;
+    font-size: 10.5pt !important;
+  }
+
+  /* 7. Structured Recipe Details View Optimization */
+  #printable-recipe-card {
+    display: block !important;
+    border: 2px solid #000000 !important;
+    padding: 2.5rem !important;
+    margin: 0 auto !important;
+    box-shadow: none !important;
+    background-color: #ffffff !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    page-break-inside: auto !important;
+  }
+
+  /* Ensure steps do not split awkwardly mid-sentence */
+  #printable-recipe-card ol li,
+  #printable-recipe-card ul li {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* 8. Micro-design adjustments for clean PDF layout elements */
+  .border-b, .border-t, .border-y {
+    border-color: #000000 !important;
+  }
+
+  .text-editorial-red, .text-[#C1121F], .text-red-600 {
+    color: #000000 !important;
+    font-weight: 700 !important;
+  }
+
+  .bg-editorial-gray, .bg-[#FAF9F6], .bg-white {
+    background: #ffffff !important;
   }
 }
